@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+*.tsbuildinfo
+# No lockfile is committed: CI installs the newest versions the ranges in
+# package.json allow, so a breaking dev dependency shows up early.
+package-lock.json
+bun.lock
+bun.lockb
+.DS_Store

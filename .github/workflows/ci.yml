@@ -1,0 +1,69 @@
+# Typecheck, test, build and pack the package on its own, the way someone who
+# clones this repository would: npm on each supported Node line, and Bun.
+# `@wuapidev/sdk` comes from npm here (in the monorepo it is the workspace copy).
+#
+# This repository mirrors packages/wuapi-cli of the wuapi monorepo (see
+# CONTRIBUTING.md); the same checks run there before anything lands here.
+# src/generated/operations.ts is generated there from the API spec and
+# committed; here it is used as is.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  node:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # Maintained Node lines. The package runs on Node 20+ (engines in
+        # package.json).
+        node: [22, 24, 26]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Update npm
+        run: npm install --global npm@11 --no-audit --no-fund
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Pack (dry run)
+        run: npm pack --dry-run
+      - name: The binary starts, and refuses to call the API without a key
+        run: |
+          node dist/cli.js --version
+          node dist/cli.js --help > /dev/null
+          node dist/cli.js messages send --help > /dev/null
+          if XDG_CONFIG_HOME="$(mktemp -d)" WUAPI_API_KEY='' node dist/cli.js whoami --json; then echo "::error::ran without a key"; exit 1; fi
+
+  bun:
+    name: Bun
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install
+        run: bun install --no-save
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run build
