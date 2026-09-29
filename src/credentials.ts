@@ -74,7 +74,7 @@ export function loadCredentials(path: string = credentialsPath()): Credentials {
   try {
     raw = readJson(path);
   } catch {
-    throw Object.assign(new Error(`${path} is not valid JSON. Delete it and run \`wuapi login\` again.`), { code: "invalid_credentials" });
+    throw Object.assign(new Error(`${path} is not valid JSON. Delete it and run \`npx @wuapidev/cli login\` again.`), { code: "invalid_credentials" });
   }
   if (raw === undefined) return { ...EMPTY, profiles: {} };
   const r = raw as { version?: number; current?: unknown; profiles?: Record<string, unknown> };
@@ -103,7 +103,7 @@ export function loadCredentials(path: string = credentialsPath()): Credentials {
     }
     return migrated;
   }
-  throw Object.assign(new Error(`${path} has an unknown format. Delete it and run \`wuapi login\` again.`), { code: "invalid_credentials" });
+  throw Object.assign(new Error(`${path} has an unknown format. Delete it and run \`npx @wuapidev/cli login\` again.`), { code: "invalid_credentials" });
 }
 
 export function saveCredentials(creds: Credentials, path: string = credentialsPath()): void {

@@ -1,4 +1,4 @@
-# Releasing the `wuapi` npm package (the CLI)
+# Releasing the `@wuapidev/cli` npm package (the CLI, command `wuapi`)
 
 The CLI is developed in the wuapi monorepo (`packages/wuapi-cli`) and
 published from its public mirror,
@@ -46,8 +46,9 @@ operation is new in the SDK).
 ## One-time setup
 
 Done once, by an owner of the `wuapidev` GitHub organization and the
-`wuapihq` npm account. The npm name `wuapi` (unscoped) must belong to
-`wuapihq`: check `npm view wuapi` before the first publish.
+`wuapihq` npm account. The package is scoped (`@wuapidev/cli`): npm refused the unscoped
+`wuapi` as too similar to `hapi` and `nwsapi` (September 2026). The command
+it installs is still `wuapi` (`bin` in package.json).
 
 1. **The mirror repository.** Create `wuapidev/wuapi-cli`: public, completely
    empty (no README, license or .gitignore), description "The wuapi
@@ -66,7 +67,7 @@ Done once, by an owner of the `wuapidev` GitHub organization and the
 
    Renew it before it expires the same way.
 3. **The npm package and trusted publishing.** Signed in to npmjs.com as
-   `wuapihq`, add a trusted publisher to `wuapi` (package Settings >
+   `wuapihq`, add a trusted publisher to `@wuapidev/cli` (package Settings >
    Trusted publishing, GitHub Actions):
    - Organization or user: `wuapidev`
    - Repository: `wuapi-cli`

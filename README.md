@@ -1,18 +1,25 @@
 # wuapi CLI
 
-[![npm version](https://img.shields.io/npm/v/wuapi.svg)](https://www.npmjs.com/package/wuapi)
+[![npm version](https://img.shields.io/npm/v/@wuapidev/cli.svg)](https://www.npmjs.com/package/@wuapidev/cli)
 [![CI](https://github.com/wuapidev/wuapi-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/wuapidev/wuapi-cli/actions/workflows/ci.yml)
-[![license](https://img.shields.io/npm/l/wuapi.svg)](LICENSE)
+[![license](https://img.shields.io/npm/l/@wuapidev/cli.svg)](LICENSE)
 
 The command line for [wuapi](https://wuapi.dev), the WhatsApp API for developers. Log in from the browser, link a number by QR code or pairing code, send a message, set up the MCP server, and call every endpoint of the API, from your terminal or from an AI agent.
 
 ```sh
-npx wuapi login                      # opens the browser, stores a key
-npx wuapi link --country VE          # shows a QR code, waits until the number is linked
-npx wuapi send +584121234567 "Hola"  # sends from your linked number
+npx @wuapidev/cli login                      # opens the browser, stores a key
+npx @wuapidev/cli link --country VE          # shows a QR code, waits until the number is linked
+npx @wuapidev/cli send +584121234567 "Hola"  # sends from your linked number
 ```
 
-Node 20 or later. Docs: [wuapi.dev/docs#cli](https://wuapi.dev/docs#cli).
+Node 20 or later. Using it often? Install it once and the command is just `wuapi`:
+
+```sh
+npm install -g @wuapidev/cli
+wuapi login
+```
+
+Docs: [wuapi.dev/docs#cli](https://wuapi.dev/docs#cli).
 
 > wuapi links your own numbers as devices, the same way WhatsApp Web works. It does not use the WhatsApp Business Platform. WhatsApp can restrict numbers that behave like spam: send only to people who expect your messages.
 
@@ -64,8 +71,8 @@ Every command takes `--json`: the result is JSON on stdout, logs and progress go
 An agent whose shell only shows output after a command ends logs in in two steps:
 
 ```sh
-npx wuapi login --start --json   # {"url": "...", "code": "ABCD-EFGH", "expiresIn": 600}; show both to the person
-npx wuapi login --finish --json  # waits until they approve, then {"profile", "organization", "project", ...}
+npx @wuapidev/cli login --start --json   # {"url": "...", "code": "ABCD-EFGH", "expiresIn": 600}; show both to the person
+npx @wuapidev/cli login --finish --json  # waits until they approve, then {"profile", "organization", "project", ...}
 ```
 
 Linking works the same way: `wuapi link --phone +584121234567 --no-wait --json` returns the account id and the pairing code at once (without `--phone`, `qrCodeUrl` and `qrCodeFile`, a PNG to show), and `wuapi wait <accountId> --json` returns when the number is ready.

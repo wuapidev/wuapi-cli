@@ -18,5 +18,5 @@ route it to the right place.
 ## Supported versions
 
 Fixes ship in a new release of the latest minor version. We're pre-1.0, so
-upgrade to the newest `0.x` to get them. `npx wuapi` runs the latest
+upgrade to the newest `0.x` to get them. `npx @wuapidev/cli` runs the latest
 unless you installed a fixed version.

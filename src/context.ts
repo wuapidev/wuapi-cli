@@ -88,7 +88,7 @@ export function selectedProfile(ctx: Ctx, creds: Credentials): { name: string; p
     const profile = creds.profiles[wanted];
     if (!profile) {
       const names = Object.keys(creds.profiles);
-      throw new CliError("profile_not_found", `No profile named "${wanted}".${names.length ? ` Profiles: ${names.join(", ")}.` : " Run `wuapi login`."}`, {
+      throw new CliError("profile_not_found", `No profile named "${wanted}".${names.length ? ` Profiles: ${names.join(", ")}.` : " Run `npx @wuapidev/cli login`."}`, {
         details: { profiles: names },
       });
     }
@@ -119,7 +119,7 @@ export function resolveAuth(ctx: Ctx): Auth {
     log(ctx, `wuapi: --profile ignored: the key comes from ${source === "flag" ? "--api-key" : source === "env" ? "WUAPI_API_KEY" : "./.env"}.`);
   }
   if (!apiKey) {
-    throw new CliError("not_logged_in", "No API key. Run `npx wuapi login`, or set WUAPI_API_KEY (create a key at https://wuapi.dev/app/api-keys).");
+    throw new CliError("not_logged_in", "No API key. Run `npx @wuapidev/cli login`, or set WUAPI_API_KEY (create a key at https://wuapi.dev/app/api-keys).");
   }
   if (!KEY_RE.test(apiKey)) {
     const where = source === "flag" ? "--api-key" : source === "env" ? "WUAPI_API_KEY" : source === "dotenv" ? "WUAPI_API_KEY in ./.env" : `profile ${chosen?.name}`;
