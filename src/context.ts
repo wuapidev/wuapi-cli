@@ -37,7 +37,7 @@ export function emit(ctx: Ctx, value: unknown, human: () => string): void {
 }
 
 export const credsPath = (ctx: Ctx) => credentialsPath(ctx.io.env, ctx.io.platform, ctx.io.home);
-export const pendingPath = (ctx: Ctx) => pendingLoginPath(ctx.io.env, ctx.io.platform, ctx.io.home);
+export const pendingPath = (ctx: Ctx) => pendingLoginPath(ctx.io.env, ctx.io.platform, ctx.io.home, ctx.io.cwd);
 
 export function readCreds(ctx: Ctx): Credentials {
   try {

@@ -49,8 +49,23 @@ function instructions(): string {
     "                (or: wuapi mcp add --client vscode)",
     "",
     "Any other client: run `npx -y @wuapidev/mcp` as a stdio server. Docs: https://wuapi.dev/docs/mcp",
+    "",
+    CLAUDE_DENY_HINT,
   ].join("\n");
 }
+
+/**
+ * A suggestion, never applied: a Claude Code rule that keeps the agent's file
+ * tools out of the stored login. It cannot stop a shell running as the same
+ * user, so the real protection is that the key never lands in the project.
+ */
+export const CLAUDE_DENY_HINT = [
+  "Optional: keep Claude Code's agent out of the stored key with a rule in .claude/settings.json:",
+  '  "permissions": {"deny": ["Read(~/.config/wuapi/**)"]}',
+  "An agent with shell access as your user could still read a file you can read; the rule, plus",
+  "never writing the key into the project (use `wuapi run -- <command>` instead of a .env), is",
+  "the practical protection.",
+].join("\n");
 
 export function mcp(ctx: Ctx): void {
   const sub = ctx.args.positionals[1];
@@ -84,6 +99,7 @@ export function mcp(ctx: Ctx): void {
     if (!ctx.io.which("claude")) {
       emit(ctx, { client, scope, configured: false, command }, () => `Run:\n\n  ${command}`);
       if (loginHint) log(ctx, loginHint);
+      log(ctx, CLAUDE_DENY_HINT);
       return;
     }
     const r = ctx.io.run("claude", args);
@@ -91,12 +107,14 @@ export function mcp(ctx: Ctx): void {
       const output = `${r.stdout}${r.stderr}`.trim();
       if (/already exists/i.test(output)) {
         emit(ctx, { client, scope, configured: true, command, status: "unchanged" }, () => `wuapi is already set up in Claude Code (${scope} scope).`);
+        log(ctx, CLAUDE_DENY_HINT);
         return;
       }
       throw new CliError("mcp_add_failed", `\`${command}\` failed${output ? `: ${output}` : "."}`);
     }
     emit(ctx, { client, scope, configured: true, command, status: "added" }, () => `Added the wuapi MCP server to Claude Code (${scope} scope). Restart Claude Code to load it.`);
     if (loginHint) log(ctx, loginHint);
+    log(ctx, CLAUDE_DENY_HINT);
     return;
   }
 

@@ -10,10 +10,12 @@ import { link, wait } from "./link.js";
 import { login } from "./login.js";
 import { mcp } from "./mcp.js";
 import { listProfiles, logout, switchProfile, whoami } from "./profiles.js";
+import { runCommand } from "./run.js";
 import { send } from "./send.js";
 import { VERSION } from "./version.js";
 
-const COMMANDS: Record<string, (ctx: Ctx) => void | Promise<void>> = {
+/** A command returns nothing (exit 0) or its exit code. */
+const COMMANDS: Record<string, (ctx: Ctx) => void | number | Promise<void | number>> = {
   login,
   logout,
   whoami,
@@ -23,9 +25,10 @@ const COMMANDS: Record<string, (ctx: Ctx) => void | Promise<void>> = {
   wait,
   send,
   mcp,
+  run: runCommand,
 };
 
-async function route(ctx: Ctx): Promise<void> {
+async function route(ctx: Ctx): Promise<void | number> {
   const { positionals, flags } = ctx.args;
   if (flags.has("version") && positionals.length === 0) {
     ctx.io.out(ctx.json ? `${JSON.stringify({ version: VERSION })}\n` : `${VERSION}\n`);
@@ -71,8 +74,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
     return exitCode;
   }
   try {
-    await route(ctx);
-    return 0;
+    return (await route(ctx)) ?? 0;
   } catch (e) {
     const { body, exitCode } = toErrorBody(e);
     if (ctx.json) io.out(`${JSON.stringify({ error: body }, null, 2)}\n`);

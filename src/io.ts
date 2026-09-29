@@ -32,6 +32,11 @@ export interface Io {
   /** Whether a command is on PATH. */
   which(command: string): boolean;
   run(command: string, args: string[]): RunResult;
+  /**
+   * Runs a command with this environment and the terminal's stdin/stdout/stderr;
+   * resolves to its exit code (127 when it cannot start).
+   */
+  exec(command: string, args: string[], env: Record<string, string | undefined>): Promise<number>;
   readStdin(): Promise<string>;
   /** Interactive list picker (TTY only). Resolves to an index, or null when cancelled. */
   pick(title: string, items: string[], initial: number): Promise<number | null>;
@@ -47,6 +52,35 @@ export function openTarget(target: string, platform: NodeJS.Platform = process.p
   } catch {
     // No opener on this machine: the URL is printed anyway.
   }
+}
+
+const SIGNALS: Record<string, number> = { SIGHUP: 1, SIGINT: 2, SIGQUIT: 3, SIGKILL: 9, SIGTERM: 15 };
+
+export function execInherit(command: string, args: string[], env: Record<string, string | undefined>): Promise<number> {
+  return new Promise((resolve) => {
+    // Ctrl-C reaches the child too (same process group): let it decide, and
+    // exit with its code.
+    const ignore = () => {};
+    process.on("SIGINT", ignore);
+    process.on("SIGTERM", ignore);
+    const done = (code: number) => {
+      process.off("SIGINT", ignore);
+      process.off("SIGTERM", ignore);
+      resolve(code);
+    };
+    let child;
+    try {
+      child = spawn(command, args, { stdio: "inherit", env: env as NodeJS.ProcessEnv, shell: process.platform === "win32" });
+    } catch (e) {
+      process.stderr.write(`wuapi: cannot run ${command}: ${(e as Error).message}\n`);
+      return done(127);
+    }
+    child.on("error", (e) => {
+      process.stderr.write(`wuapi: cannot run ${command}: ${e.message}\n`);
+      done(127);
+    });
+    child.on("exit", (code, signal) => done(code ?? (signal ? 128 + (SIGNALS[signal] ?? 1) : 1)));
+  });
 }
 
 export function onPath(command: string, env: Record<string, string | undefined> = process.env, platform: NodeJS.Platform = process.platform): boolean {
@@ -122,6 +156,7 @@ export function nodeIo(): Io {
       const r = spawnSync(command, args, { encoding: "utf8", shell: process.platform === "win32" });
       return { status: r.status, stdout: r.stdout ?? "", stderr: r.stderr ?? (r.error ? r.error.message : "") };
     },
+    exec: execInherit,
     readStdin: readAll,
     pick: pickInTerminal,
   };

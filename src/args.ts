@@ -18,6 +18,7 @@ export const BOOLEAN_FLAGS = new Set([
   "env",
   "start",
   "finish",
+  "here",
 ]);
 
 const SHORT: Record<string, string> = { h: "help", v: "version" };

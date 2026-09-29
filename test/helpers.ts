@@ -51,6 +51,9 @@ export interface FakeIo extends Io {
   sleeps: number[];
   opened: string[];
   runs: { command: string; args: string[] }[];
+  execs: { command: string; args: string[]; env: Record<string, string | undefined> }[];
+  /** What exec resolves to. */
+  execCode: number;
   clock: { t: number };
 }
 
@@ -72,6 +75,8 @@ export function fakeIo(overrides: Partial<Io> & { configHome?: string } = {}): F
     sleeps: [],
     opened: [],
     runs: [],
+    execs: [],
+    execCode: 0,
     clock,
     out(t) {
       io.stdout.push(t);
@@ -96,6 +101,10 @@ export function fakeIo(overrides: Partial<Io> & { configHome?: string } = {}): F
     run(command, args) {
       io.runs.push({ command, args });
       return { status: 0, stdout: "", stderr: "" };
+    },
+    async exec(command, args, env) {
+      io.execs.push({ command, args, env });
+      return io.execCode;
     },
     readStdin: async () => "",
     pick: async () => null,

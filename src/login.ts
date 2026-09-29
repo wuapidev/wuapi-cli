@@ -222,7 +222,7 @@ export async function login(ctx: Ctx): Promise<void> {
 
   if (fin) {
     const pending = readJson(path) as Pending | undefined;
-    if (!pending?.deviceCode) throw new CliError("no_pending_login", "No login is waiting. Run `wuapi login --start` first.");
+    if (!pending?.deviceCode) throw new CliError("no_pending_login", `No login is waiting in this folder (${ctx.io.cwd}). Run \`wuapi login --start\` here first; --finish must run in the same folder.`);
     if (ctx.io.now() >= pending.expiresAt) {
       removeFile(path);
       throw new CliError("expired_token", "The login code expired before it was approved. Run `wuapi login --start` again.");

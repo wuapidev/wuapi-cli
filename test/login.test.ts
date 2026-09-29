@@ -2,7 +2,7 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { credentialsPath, pendingLoginPath } from "../src/paths.js";
-import { KEY, fakeIo, mockFetch, run } from "./helpers.js";
+import { KEY, fakeIo, mockFetch, run, tempDir } from "./helpers.js";
 
 const CODE = {
   deviceCode: "dev_123",
@@ -76,7 +76,7 @@ describe("wuapi login", () => {
     const start = await run(io, "login", "--start", "--json");
     expect(start.code).toBe(0);
     expect(start.json).toEqual({ url: CODE.verificationUriComplete, code: "ABCD-EFGH", expiresIn: 600 });
-    const pendingPath = pendingLoginPath(io.env, io.platform, io.home);
+    const pendingPath = pendingLoginPath(io.env, io.platform, io.home, io.cwd);
     expect(statSync(pendingPath).mode & 0o777).toBe(0o600);
     expect(io.sleeps).toEqual([]);
 
@@ -90,6 +90,36 @@ describe("wuapi login", () => {
     expect(again.json.error.code).toBe("no_pending_login");
   });
 
+  it("keeps one pending login per folder, so parallel sessions do not collide", async () => {
+    const codeB = { ...CODE, deviceCode: "dev_456", userCode: "WXYZ-1234" };
+    const { fetch, calls } = mockFetch({
+      "POST /cli/device/code": [{ body: CODE }, { body: codeB }],
+      "POST /cli/device/token": (call) => ({ body: { ...GRANT, organization: { id: "org_1", name: (call.body as { deviceCode: string }).deviceCode === "dev_123" ? "Acme A" : "Acme B" } } }),
+    });
+    const configHome = tempDir();
+    const a = fakeIo({ fetch, configHome });
+    const b = fakeIo({ fetch, configHome });
+    expect(a.cwd).not.toBe(b.cwd);
+    await run(a, "login", "--start", "--json", "--no-browser");
+    await run(b, "login", "--start", "--json", "--no-browser");
+    const pathA = pendingLoginPath(a.env, a.platform, a.home, a.cwd);
+    const pathB = pendingLoginPath(b.env, b.platform, b.home, b.cwd);
+    expect(pathA).not.toBe(pathB);
+    expect(existsSync(pathA) && existsSync(pathB)).toBe(true);
+
+    const finA = await run(a, "login", "--finish", "--json");
+    expect(finA.json.organization.name).toBe("Acme A");
+    expect(existsSync(pathB)).toBe(true);
+    const finB = await run(b, "login", "--finish", "--json");
+    expect(finB.json.organization.name).toBe("Acme B");
+    expect(calls.filter((c) => c.path === "/cli/device/token").map((c) => (c.body as { deviceCode: string }).deviceCode)).toEqual(["dev_123", "dev_456"]);
+
+    // Another folder has nothing waiting.
+    const c = fakeIo({ fetch, configHome });
+    const none = await run(c, "login", "--finish", "--json");
+    expect(none.json.error.code).toBe("no_pending_login");
+  });
+
   it("--finish refuses an expired pending code", async () => {
     const { fetch } = mockFetch({ "POST /cli/device/code": [{ body: CODE }] });
     const io = fakeIo({ fetch });
@@ -97,7 +127,7 @@ describe("wuapi login", () => {
     io.clock.t += 601_000;
     const r = await run(io, "login", "--finish", "--json");
     expect(r.json.error.code).toBe("expired_token");
-    expect(existsSync(pendingLoginPath(io.env, io.platform, io.home))).toBe(false);
+    expect(existsSync(pendingLoginPath(io.env, io.platform, io.home, io.cwd))).toBe(false);
   });
 
   it("--env writes the key to ./.env once and ignores .env in git, without printing it", async () => {

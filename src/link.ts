@@ -1,18 +1,24 @@
-// `wuapi link`: create an account (a WhatsApp number linked as a device), show
-// its QR code or pairing code, and wait until it is `ready`. `wuapi wait`: the
-// waiting half, for an account that already exists.
+// `wuapi link`: link a WhatsApp number. By default it creates an invitation
+// (POST /v1/invitations), a hosted page the person opens to link their number
+// with a QR code or a pairing code, and waits until the account it creates is
+// `ready`. The CLI never shows a QR code or pairing code in this mode, so an
+// agent running it never sees or relays one. `wuapi link --here` is the old
+// in-terminal flow (QR code here, or a pairing code with --phone), for a person
+// at the terminal. `wuapi wait`: the waiting half, for an account or an
+// invitation that already exists.
 //
-// Waiting polls GET /v1/accounts/{id} every 2 s, bounded by --timeout. A
-// failed poll (network drop, timeout, 5xx) is retried on the next tick; only a
-// terminal state (failed, logged out, link timeout, ...) or the deadline ends it.
+// Waiting polls GET /v1/invitations/{id} and GET /v1/accounts/{id} every 2 s,
+// bounded by --timeout. A failed poll (network drop, timeout, 5xx) is retried
+// on the next tick; only a terminal state (failed, expired, logged out, link
+// timeout, ...) or the deadline ends it.
 
 import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { WuapiError, type Account, type Wuapi } from "@wuapidev/sdk";
+import { WuapiError, type Account, type Invitation, type ProxyLocationItem, type Wuapi } from "@wuapidev/sdk";
 import { allowOnly, boolFlag, numberFlag, stringFlag } from "./args.js";
-import { emit, log, makeClient, type Ctx } from "./context.js";
+import { emit, log, makeClient, resolveAuth, type Ctx } from "./context.js";
 import { countryFromPhone, normalizePhone } from "./dialcodes.js";
 import { CliError, usage } from "./errors.js";
 import { qrToTerminal, pngFromDataUrl } from "./qr.js";
@@ -96,7 +102,7 @@ function showCodes(ctx: Ctx, account: Account, shown: Shown, open: boolean): boo
     } else {
       const art = qrToTerminal(account.qrCodeUrl, ctx.io.stdoutIsTTY && !ctx.io.env.NO_COLOR);
       ctx.io.out(`${first ? "" : "\nThe QR code refreshed:\n"}${art ?? `(Cannot draw the QR code here${files ? `; open ${files.png}` : ""}.)`}\n`);
-      if (first) ctx.io.out(`Scan it: ${LINK_PATH}.${files && !open ? `\nOr open it in a browser: wuapi link --open, or ${files.html}` : ""}\n`);
+      if (first) ctx.io.out(`Scan it: ${LINK_PATH}.${files && !open ? `\nOr open it in a browser: wuapi link --here --open, or ${files.html}` : ""}\n`);
     }
   }
   if (account.status !== "ready" && account.pairingCode && account.pairingCode !== shown.code) {
@@ -120,7 +126,7 @@ export async function waitForAccount(
   ctx: Ctx,
   client: Wuapi,
   accountId: string,
-  opts: { timeoutMs: number; untilCode?: boolean; open?: boolean },
+  opts: { timeoutMs: number; untilCode?: boolean; open?: boolean; quiet?: boolean },
 ): Promise<{ account: Account; shown: Shown }> {
   const deadline = ctx.io.now() + opts.timeoutMs;
   const shown: Shown = { qr: null, code: null, qrFile: null, opened: false };
@@ -155,7 +161,8 @@ export async function waitForAccount(
       }
       const t = terminal(account);
       if (t) throw t;
-      const changed = showCodes(ctx, account, shown, opts.open ?? false);
+      // quiet: an invitation's account; its codes belong to the person on the page.
+      const changed = opts.quiet ? false : showCodes(ctx, account, shown, opts.open ?? false);
       if (opts.untilCode && (shown.qr || shown.code) && changed) return { account, shown };
     }
     if (ctx.io.now() + POLL_MS > deadline) {
@@ -177,8 +184,30 @@ function readyJson(account: Account) {
   return { accountId: account.id, status: account.status, phone: account.phone, profileName: account.profileName, account };
 }
 
-export async function link(ctx: Ctx): Promise<void> {
-  allowOnly(ctx.args, ["phone", "country", "city", "name", "open", "no-wait", "timeout"]);
+/** The proxy location: the country's biggest city, or the best match for `city`. */
+async function findLocation(client: Wuapi, country: string, city: string | undefined): Promise<ProxyLocationItem | undefined> {
+  const page = await client.proxyLocations.list(city ? { q: city, country, limit: 1 } : { country, limit: 1 }).page();
+  return page.items[0];
+}
+
+function noLocation(country: string, city: string | undefined): CliError {
+  return new CliError(
+    "unsupported_proxy_location",
+    city ? `No proxy location matches "${city}" in ${country}. See https://wuapi.dev/proxy-locations.` : `No proxy location in ${country}. See https://wuapi.dev/proxy-locations.`,
+    { exitCode: 2 },
+  );
+}
+
+interface LinkFlags {
+  phone: string | undefined;
+  countryFlag: string | undefined;
+  country: string | undefined;
+  city: string | undefined;
+  name: string | undefined;
+  noWait: boolean;
+}
+
+function linkFlags(ctx: Ctx): LinkFlags {
   if (ctx.args.positionals.length > 1) throw usage("wuapi link takes flags only: wuapi link [--phone +E164] [--country XX] [--city name] [--name label]");
   const phoneFlag = stringFlag(ctx.args, "phone");
   const phone = phoneFlag === undefined ? undefined : normalizePhone(phoneFlag);
@@ -186,6 +215,144 @@ export async function link(ctx: Ctx): Promise<void> {
   const countryFlag = stringFlag(ctx.args, "country");
   if (countryFlag !== undefined && !/^[A-Za-z]{2}$/.test(countryFlag)) throw usage("--country must be a two-letter ISO code, like VE or US.");
   const country = (countryFlag ?? (phone ? countryFromPhone(phone) : undefined))?.toUpperCase();
+  return { phone, countryFlag, country, city: stringFlag(ctx.args, "city"), name: stringFlag(ctx.args, "name"), noWait: boolFlag(ctx.args, "no-wait") };
+}
+
+export async function link(ctx: Ctx): Promise<void> {
+  if (boolFlag(ctx.args, "here")) return linkHere(ctx);
+  return linkByInvitation(ctx);
+}
+
+/**
+ * The default: an invitation the person opens in the browser, where they pick
+ * the QR code or the pairing code. Nothing here ever prints either.
+ */
+async function linkByInvitation(ctx: Ctx): Promise<void> {
+  allowOnly(ctx.args, ["phone", "country", "city", "name", "no-wait", "timeout", "no-browser", "here"]);
+  const f = linkFlags(ctx);
+  if (f.city && !f.country) throw usage("--city needs --country (or a --phone whose country is known).");
+  const timeoutMs = numberFlag(ctx.args, "timeout", 900) * 1000;
+  const auth = resolveAuth(ctx);
+  const client = makeClient(ctx, auth);
+
+  // Preset where the number's proxy exits when we know the country; without
+  // one the person picks it on the page.
+  let proxyLocation: { country: string; city: string } | undefined;
+  if (f.country) {
+    const location = await findLocation(client, f.country, f.city);
+    if (location) {
+      proxyLocation = { country: location.country, city: location.city };
+      log(ctx, `wuapi: proxy location ${location.cityName}, ${location.countryName} (${location.country}/${location.city})`);
+    } else if (f.countryFlag || f.city) {
+      throw noLocation(f.country, f.city);
+    } else {
+      log(ctx, `wuapi: no proxy location in ${f.country}; the person picks one on the page.`);
+    }
+  }
+
+  // One idempotency key for the create: the SDK's retries replay it instead of
+  // creating a second invitation. A project key invites into its own project;
+  // an organization key into --project / WUAPI_PROJECT / the profile's project.
+  const invitation = await client.invitations.create(
+    {
+      methods: ["qr_code", "pairing_code"],
+      expiresInDays: 1,
+      ...(auth.project ? { projectId: auth.project } : {}),
+      ...(f.name ? { accountName: f.name } : {}),
+      ...(f.phone ? { inviteePhone: f.phone } : {}),
+      ...(f.country ? { suggestedCountry: f.country } : {}),
+      ...(proxyLocation ? { proxyLocation } : {}),
+    },
+    { idempotencyKey: randomUUID() },
+  );
+  const url = invitation.url;
+  if (!url) throw new CliError("invalid_response", `The API created invitation ${invitation.id} without a link.`, { details: { invitationId: invitation.id } });
+  log(ctx, `wuapi: created invitation ${invitation.id}`);
+  if (!boolFlag(ctx.args, "no-browser")) ctx.io.open(url);
+
+  const openText = `Open this link to link your number (QR code or pairing code): ${url}`;
+  if (f.noWait) {
+    emit(ctx, { invitationId: invitation.id, url, expiresAt: invitation.expiresAt }, () =>
+      [openText, `It expires at ${invitation.expiresAt}. Run \`wuapi wait ${invitation.id}\` to wait until the number is linked.`].join("\n"),
+    );
+    return;
+  }
+  if (ctx.json) log(ctx, `wuapi: ${openText}`);
+  else ctx.io.out(`${openText}\nWaiting until it is linked...\n`);
+  const { account } = await waitForInvitation(ctx, client, invitation.id, { timeoutMs });
+  emit(ctx, invitationReadyJson(invitation.id, account), () => readyText(account));
+}
+
+function invitationError(inv: Invitation): CliError | undefined {
+  const details = { invitationId: inv.id, status: inv.status, failureReason: inv.failureReason, accountId: inv.accountId };
+  if (inv.status === "failed") {
+    return new CliError(
+      "invitation_failed",
+      `Invitation ${inv.id} failed${inv.failureReason ? ` (${inv.failureReason})` : ""}. The person can try again on the same link (then run \`wuapi wait ${inv.id}\`), or run \`wuapi link\` for a new one.`,
+      { details },
+    );
+  }
+  if (inv.status === "expired") return new CliError("invitation_expired", `Invitation ${inv.id} expired before the number was linked. Run \`wuapi link\` for a new link.`, { details });
+  if (inv.status === "cancelled") return new CliError("invitation_cancelled", `Invitation ${inv.id} was cancelled. Run \`wuapi link\` for a new link.`, { details });
+  return undefined;
+}
+
+/**
+ * Polls the invitation until it is completed, then waits until its account is
+ * ready. Never prints the account's QR code or pairing code.
+ */
+export async function waitForInvitation(
+  ctx: Ctx,
+  client: Wuapi,
+  invitationId: string,
+  opts: { timeoutMs: number; first?: Invitation },
+): Promise<{ invitation: Invitation; account: Account }> {
+  const deadline = ctx.io.now() + opts.timeoutMs;
+  let pending: Invitation | undefined = opts.first;
+  let last: Invitation | undefined;
+  let lastStatus = "";
+  let failures = 0;
+  for (;;) {
+    let inv: Invitation | undefined = pending;
+    pending = undefined;
+    if (!inv) {
+      try {
+        inv = await client.invitations.get(invitationId);
+        failures = 0;
+      } catch (e) {
+        if (!isTransient(e)) throw e;
+        failures++;
+        if (failures === 1 || failures % 10 === 0) log(ctx, `wuapi: ${(e as Error).message} Retrying...`);
+      }
+    }
+    if (inv) {
+      last = inv;
+      if (inv.status !== lastStatus) {
+        if (lastStatus) log(ctx, `wuapi: invitation ${inv.status}`);
+        lastStatus = inv.status;
+      }
+      if (inv.status === "completed" && inv.accountId) {
+        const { account } = await waitForAccount(ctx, client, inv.accountId, { timeoutMs: Math.max(deadline - ctx.io.now(), POLL_MS), quiet: true });
+        return { invitation: inv, account };
+      }
+      const t = invitationError(inv);
+      if (t) throw t;
+    }
+    if (ctx.io.now() + POLL_MS > deadline) {
+      throw new CliError(
+        "wait_timeout",
+        `Timed out waiting for invitation ${invitationId}${last ? ` (status ${last.status})` : ""}. Run \`wuapi wait ${invitationId}\` to keep waiting.`,
+        { details: { invitationId, status: last?.status ?? null } },
+      );
+    }
+    await ctx.io.sleep(POLL_MS);
+  }
+}
+
+/** The old in-terminal flow: for a person at the terminal. Agents should not use it. */
+async function linkHere(ctx: Ctx): Promise<void> {
+  allowOnly(ctx.args, ["phone", "country", "city", "name", "open", "no-wait", "timeout", "here"]);
+  const { phone, country, city, name, noWait } = linkFlags(ctx);
   if (!country) {
     throw new CliError(
       "missing_country",
@@ -195,23 +362,12 @@ export async function link(ctx: Ctx): Promise<void> {
       { exitCode: 2 },
     );
   }
-  const city = stringFlag(ctx.args, "city");
-  const name = stringFlag(ctx.args, "name");
   const timeoutMs = numberFlag(ctx.args, "timeout", 300) * 1000;
-  const noWait = boolFlag(ctx.args, "no-wait");
   const open = boolFlag(ctx.args, "open");
   const client = makeClient(ctx);
 
-  // The proxy location: the country's biggest city, or the best match for --city.
-  const page = await client.proxyLocations.list(city ? { q: city, country, limit: 1 } : { country, limit: 1 }).page();
-  const location = page.items[0];
-  if (!location) {
-    throw new CliError(
-      "unsupported_proxy_location",
-      city ? `No proxy location matches "${city}" in ${country}. See https://wuapi.dev/proxy-locations.` : `No proxy location in ${country}. See https://wuapi.dev/proxy-locations.`,
-      { exitCode: 2 },
-    );
-  }
+  const location = await findLocation(client, country, city);
+  if (!location) throw noLocation(country, city);
   log(ctx, `wuapi: proxy location ${location.cityName}, ${location.countryName} (${location.country}/${location.city})`);
 
   // One idempotency key for the create: the SDK's retries replay it instead of
@@ -248,11 +404,50 @@ export async function link(ctx: Ctx): Promise<void> {
   emit(ctx, readyJson(ready), () => readyText(ready));
 }
 
+function invitationReadyJson(invitationId: string, account: Account) {
+  return { invitationId, accountId: account.id, phone: account.phone, status: account.status, profileName: account.profileName };
+}
+
+/**
+ * `wuapi wait <id>`: an account id, or an invitation id from `wuapi link
+ * --no-wait`. Ids carry no prefix, so an id the accounts endpoint does not
+ * know (404) is tried as an invitation.
+ */
 export async function wait(ctx: Ctx): Promise<void> {
   allowOnly(ctx.args, ["timeout", "open"]);
-  const accountId = ctx.args.positionals[1];
-  if (!accountId || ctx.args.positionals.length > 2) throw usage("Usage: wuapi wait <accountId> [--timeout 300]");
+  const id = ctx.args.positionals[1];
+  if (!id || ctx.args.positionals.length > 2) throw usage("Usage: wuapi wait <accountId | invitationId> [--timeout seconds]");
   const client = makeClient(ctx);
-  const { account } = await waitForAccount(ctx, client, accountId, { timeoutMs: numberFlag(ctx.args, "timeout", 300) * 1000, open: boolFlag(ctx.args, "open") });
+  const given = ctx.args.flags.has("timeout");
+  let account: Account;
+  try {
+    ({ account } = await waitForAccount(ctx, client, id, { timeoutMs: numberFlag(ctx.args, "timeout", 300) * 1000, open: boolFlag(ctx.args, "open") }));
+  } catch (e) {
+    if (!(e instanceof WuapiError) || e.status !== 404) throw e;
+    let first: Invitation;
+    try {
+      first = await getInvitation(ctx, client, id);
+    } catch (e2) {
+      if (e2 instanceof WuapiError && e2.status === 404) {
+        throw new CliError("not_found", `No account or invitation ${id}.`, { details: { id } });
+      }
+      throw e2;
+    }
+    const { account: ready } = await waitForInvitation(ctx, client, id, { timeoutMs: (given ? numberFlag(ctx.args, "timeout", 900) : 900) * 1000, first });
+    emit(ctx, invitationReadyJson(id, ready), () => readyText(ready));
+    return;
+  }
   emit(ctx, readyJson(account), () => readyText(account));
+}
+
+/** GET /v1/invitations/{id}, retrying transient failures a few times. */
+async function getInvitation(ctx: Ctx, client: Wuapi, id: string): Promise<Invitation> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await client.invitations.get(id);
+    } catch (e) {
+      if (!isTransient(e) || attempt >= 5) throw e;
+      await ctx.io.sleep(POLL_MS);
+    }
+  }
 }

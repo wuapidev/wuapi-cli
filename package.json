@@ -1,7 +1,7 @@
 {
   "name": "@wuapidev/cli",
-  "version": "0.1.1",
-  "description": "The wuapi command line: log in from the browser, link a WhatsApp number by QR or pairing code, send messages, set up the MCP server and call every endpoint of the wuapi API from your terminal or your agent.",
+  "version": "0.2.0",
+  "description": "The wuapi command line: log in from the browser, link a WhatsApp number through a link the person opens (QR or pairing code), run your app with the key, send messages, set up the MCP server and call every endpoint of the wuapi API from your terminal or your agent.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

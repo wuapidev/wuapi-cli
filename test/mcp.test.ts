@@ -11,6 +11,8 @@ describe("wuapi mcp add", () => {
     expect(io.runs).toEqual([{ command: "claude", args: ["mcp", "add", "wuapi", "--scope", "user", "--", "npx", "-y", "@wuapidev/mcp"] }]);
     expect(r.json).toMatchObject({ client: "claude", configured: true });
     expect(JSON.stringify(io.runs)).not.toMatch(/wu_live|WUAPI_API_KEY/);
+    // Suggested, never written: a deny rule for the stored login.
+    expect(r.err).toContain('"permissions": {"deny": ["Read(~/.config/wuapi/**)"]}');
   });
 
   it("prints the command when claude is not installed", async () => {
