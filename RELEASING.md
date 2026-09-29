@@ -76,6 +76,9 @@ it installs is still `wuapi` (`bin` in package.json).
 
    If npm does not let you configure a package that does not exist yet,
    publish `0.1.0` once by hand from a clean checkout of the mirror
+   (done 2026-09-29; keep `bin` as `dist/cli.js` without `./`: npm 12 drops
+   `./dist/cli.js` at publish, which is why 0.1.0 has no command and 0.1.1
+   followed)
    (`npm ci || npm install`, `npm run build`, `npm publish --access public`,
    with 2FA), then add the trusted publisher, and from then on releases go
    through `release.yml`. Afterwards set the package's publishing access to
