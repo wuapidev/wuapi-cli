@@ -436,6 +436,112 @@ export const OPERATIONS: readonly Operation[] = [
     "deprecated": false
   },
   {
+    "operationId": "listChats",
+    "resource": [
+      "chats"
+    ],
+    "method": "list",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/chats",
+    "pathParams": [
+      "accountId"
+    ],
+    "query": [
+      {
+        "name": "archived",
+        "type": "boolean",
+        "required": false,
+        "description": "`true`: only the chats WhatsApp reported as archived. `false`: every other chat, including those whose `archived` is `null`."
+      },
+      {
+        "name": "unread",
+        "type": "boolean",
+        "required": false,
+        "description": "`true`: only the chats with unread messages or marked as unread. `false`: every other chat, including those whose `unread` is `null`."
+      },
+      {
+        "name": "type",
+        "type": "\"direct\" | \"group\" | \"channel\"",
+        "required": false,
+        "description": "Only chats of this type."
+      },
+      {
+        "name": "q",
+        "type": "string",
+        "required": false,
+        "description": "Search: the contact's saved name, profile name, username or number, the group's name, or words of the chat's recent messages. The last word matches as a prefix. Results come best match first, not by…"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "description": "Page size, 1 to 100."
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false,
+        "description": "Opaque cursor from a previous page's `nextCursor`. An invalid or expired cursor answers `400 invalid_request`."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": true,
+    "summary": "List chats",
+    "description": "The account's chats, the one with the newest message first: every conversation with a contact, group or channel that wuapi holds a message of, each with its latest message and WhatsApp's unread, pinned, archived and muted state. A state wuapi has never observed is `null` (see `Chat`). The filters combine, and a page of combined filters may hold fewer chats than `limit` while `nextCursor` is set:…",
+    "deprecated": false
+  },
+  {
+    "operationId": "getChat",
+    "resource": [
+      "chats"
+    ],
+    "method": "get",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/chats/{chatId}",
+    "pathParams": [
+      "accountId",
+      "chatId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Get a chat",
+    "description": "One chat of the account, with its latest message and WhatsApp's unread, pinned, archived and muted state. A chat wuapi holds no message of answers `404 not_found`.",
+    "deprecated": false
+  },
+  {
+    "operationId": "deleteChat",
+    "resource": [
+      "chats"
+    ],
+    "method": "delete",
+    "httpMethod": "DELETE",
+    "path": "/v1/accounts/{accountId}/chats/{chatId}",
+    "pathParams": [
+      "accountId",
+      "chatId"
+    ],
+    "query": [
+      {
+        "name": "deleteMedia",
+        "type": "boolean",
+        "required": false,
+        "description": "Also delete the chat's media."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Delete a chat",
+    "description": "Delete the chat on the linked devices. Messages stored in wuapi are kept.",
+    "deprecated": false
+  },
+  {
     "operationId": "sendChatPresence",
     "resource": [
       "chats"
@@ -679,34 +785,6 @@ export const OPERATIONS: readonly Operation[] = [
     "paginated": false,
     "summary": "Unmute a chat",
     "description": "Turn the chat's notifications back on.",
-    "deprecated": false
-  },
-  {
-    "operationId": "deleteChat",
-    "resource": [
-      "chats"
-    ],
-    "method": "delete",
-    "httpMethod": "DELETE",
-    "path": "/v1/accounts/{accountId}/chats/{chatId}",
-    "pathParams": [
-      "accountId",
-      "chatId"
-    ],
-    "query": [
-      {
-        "name": "deleteMedia",
-        "type": "boolean",
-        "required": false,
-        "description": "Also delete the chat's media."
-      }
-    ],
-    "hasBody": false,
-    "bodyRequired": false,
-    "body": [],
-    "paginated": false,
-    "summary": "Delete a chat",
-    "description": "Delete the chat on the linked devices. Messages stored in wuapi are kept.",
     "deprecated": false
   },
   {
