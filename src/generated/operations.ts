@@ -272,6 +272,12 @@ export const OPERATIONS: readonly Operation[] = [
             "description": "Which received media is downloaded right away. Applies to messages received from then on; files already received keep what they had."
           },
           {
+            "name": "imageQuality",
+            "type": "\"standard\" | \"hd\" | \"original\"",
+            "required": false,
+            "description": "What this account's image messages are re-encoded to before their upload. Applies to images sent from then on; a send that names `media.quality` keeps its own."
+          },
+          {
             "name": "proxyLocation",
             "type": "object",
             "required": false,
@@ -282,7 +288,7 @@ export const OPERATIONS: readonly Operation[] = [
     ],
     "paginated": false,
     "summary": "Update an account",
-    "description": "Rename it, set automatic call rejection, or turn on and tune its pacing (anti-ban protections, off by default). Call settings are sent to the live session (the engine must know the account; it does not need to be `ready`). Pacing applies from the next send, without reconnecting. `historySync` is stored at once and applies to the next link: WhatsApp sends history only right after a number links. A…",
+    "description": "Rename it, set automatic call rejection, or turn on and tune its pacing (anti-ban protections, off by default). Call settings are sent to the live session (the engine must know the account; it does not need to be `ready`). Pacing applies from the next send, without reconnecting. `imageQuality` applies to the images sent from then on. `historySync` is stored at once and applies to the next link: W…",
     "deprecated": false
   },
   {
@@ -1908,7 +1914,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "media",
             "type": "object",
             "required": true,
-            "description": "A file to send, fetched by our servers."
+            "description": "An image to send, fetched by our servers."
           },
           {
             "name": "text",
