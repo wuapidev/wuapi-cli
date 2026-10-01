@@ -266,6 +266,12 @@ export const OPERATIONS: readonly Operation[] = [
             "description": "Import history at the next link, or not. WhatsApp sends this history once, right after the number links, so a change applies to the next link. A number that is already linked gets no new history, not…"
           },
           {
+            "name": "mediaAutoDownload",
+            "type": "\"none\" | \"all\" | object",
+            "required": false,
+            "description": "Which received media is downloaded right away. Applies to messages received from then on; files already received keep what they had."
+          },
+          {
             "name": "proxyLocation",
             "type": "object",
             "required": false,
@@ -2678,6 +2684,33 @@ export const OPERATIONS: readonly Operation[] = [
     "deprecated": false
   },
   {
+    "operationId": "getMessageMedia",
+    "resource": [
+      "messages"
+    ],
+    "method": "getMedia",
+    "httpMethod": "GET",
+    "path": "/v1/messages/{messageId}/media",
+    "pathParams": [
+      "messageId"
+    ],
+    "query": [
+      {
+        "name": "redirect",
+        "type": "boolean",
+        "required": false,
+        "description": "`false` answers JSON with the file's URL instead of the `302` redirect."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Get a message's media",
+    "description": "The message's file. By default the answer is `302 Found` to the file (no API key needed there), so `curl -L`, browsers and HTTP clients download it directly. With `redirect=false`, or an `Accept` header that names only `application/json` (the SDKs), the answer is this JSON with the file's URL instead.",
+    "deprecated": false
+  },
+  {
     "operationId": "reactToMessage",
     "resource": [
       "messages"
@@ -3843,7 +3876,7 @@ export const OPERATIONS: readonly Operation[] = [
           },
           {
             "name": "events",
-            "type": "\"account.qr_code_issued\" | \"account.pairing_code_issued\" | \"account.connected\" | \"account.disconnected\" | \"account.failed\" | \"message.received\" | \"message.sent\" | \"message.delivered\" | \"message.read\" | \"message.failed\" | \"message.edited\" | \"message.deleted\" | \"poll.voted\" | \"group.joined\" | \"group.updated\" | \"group.join_requested\" | \"group.join_request_revoked\" | \"chat.updated\" | \"chat.presence_updated\" | \"contact.presence_updated\" | \"contact.picture_updated\" | \"contact.updated\" | \"blocklist.updated\" | \"label.updated\" | \"call.received\" | \"call.ended\" | \"channel.message_received\" | \"channel.message_updated\" | \"channel.updated\" | \"history.synced\" | \"project.created\" | \"project.updated\" | \"project.deleted\" | \"invitation.status_changed\" | \"webhook.test\"[]",
+            "type": "\"account.qr_code_issued\" | \"account.pairing_code_issued\" | \"account.connected\" | \"account.disconnected\" | \"account.failed\" | \"message.received\" | \"message.sent\" | \"message.delivered\" | \"message.read\" | \"message.failed\" | \"message.edited\" | \"message.deleted\" | \"message.media_downloaded\" | \"poll.voted\" | \"group.joined\" | \"group.updated\" | \"group.join_requested\" | \"group.join_request_revoked\" | \"chat.updated\" | \"chat.presence_updated\" | \"contact.presence_updated\" | \"contact.picture_updated\" | \"contact.updated\" | \"blocklist.updated\" | \"label.updated\" | \"call.received\" | \"call.ended\" | \"channel.message_received\" | \"channel.message_updated\" | \"channel.updated\" | \"history.synced\" | \"project.created\" | \"project.updated\" | \"project.deleted\" | \"invitation.status_changed\" | \"webhook.test\"[]",
             "required": true,
             "description": ""
           },
@@ -3907,7 +3940,7 @@ export const OPERATIONS: readonly Operation[] = [
           },
           {
             "name": "events",
-            "type": "\"account.qr_code_issued\" | \"account.pairing_code_issued\" | \"account.connected\" | \"account.disconnected\" | \"account.failed\" | \"message.received\" | \"message.sent\" | \"message.delivered\" | \"message.read\" | \"message.failed\" | \"message.edited\" | \"message.deleted\" | \"poll.voted\" | \"group.joined\" | \"group.updated\" | \"group.join_requested\" | \"group.join_request_revoked\" | \"chat.updated\" | \"chat.presence_updated\" | \"contact.presence_updated\" | \"contact.picture_updated\" | \"contact.updated\" | \"blocklist.updated\" | \"label.updated\" | \"call.received\" | \"call.ended\" | \"channel.message_received\" | \"channel.message_updated\" | \"channel.updated\" | \"history.synced\" | \"project.created\" | \"project.updated\" | \"project.deleted\" | \"invitation.status_changed\" | \"webhook.test\"[]",
+            "type": "\"account.qr_code_issued\" | \"account.pairing_code_issued\" | \"account.connected\" | \"account.disconnected\" | \"account.failed\" | \"message.received\" | \"message.sent\" | \"message.delivered\" | \"message.read\" | \"message.failed\" | \"message.edited\" | \"message.deleted\" | \"message.media_downloaded\" | \"poll.voted\" | \"group.joined\" | \"group.updated\" | \"group.join_requested\" | \"group.join_request_revoked\" | \"chat.updated\" | \"chat.presence_updated\" | \"contact.presence_updated\" | \"contact.picture_updated\" | \"contact.updated\" | \"blocklist.updated\" | \"label.updated\" | \"call.received\" | \"call.ended\" | \"channel.message_received\" | \"channel.message_updated\" | \"channel.updated\" | \"history.synced\" | \"project.created\" | \"project.updated\" | \"project.deleted\" | \"invitation.status_changed\" | \"webhook.test\"[]",
             "required": false,
             "description": ""
           },
