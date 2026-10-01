@@ -1068,6 +1068,45 @@ export const OPERATIONS: readonly Operation[] = [
     "deprecated": false
   },
   {
+    "operationId": "listContacts",
+    "resource": [
+      "contacts"
+    ],
+    "method": "list",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/contacts",
+    "pathParams": [
+      "accountId"
+    ],
+    "query": [
+      {
+        "name": "q",
+        "type": "string",
+        "required": false,
+        "description": "Search: the saved name, profile name, business name, username or number. The last word matches as a prefix. Results come best match first, not by name."
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "description": "Page size, 1 to 100."
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false,
+        "description": "Opaque cursor from a previous page's `nextCursor`. An invalid or expired cursor answers `400 invalid_request`."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": true,
+    "summary": "List contacts",
+    "description": "The account's contacts, ordered by saved name: its address book as the linked phone synced it to wuapi. Read from what wuapi stored, without asking WhatsApp, so it works while the account is not `ready`.",
+    "deprecated": false
+  },
+  {
     "operationId": "checkContacts",
     "resource": [
       "contacts"
@@ -1128,7 +1167,28 @@ export const OPERATIONS: readonly Operation[] = [
     ],
     "paginated": false,
     "summary": "Look up contacts",
-    "description": "About text, picture id, verified business name and device count. Read-only.",
+    "description": "About text, picture id, verified business name, username and device count, asked from WhatsApp for 1 to 50 contacts. Read-only. `savedName` and `profileName` are `null` here: the account's address book is `GET …/contacts`. The picture ids and usernames it returns are kept on the chats and contacts wuapi stores.",
+    "deprecated": false
+  },
+  {
+    "operationId": "getContact",
+    "resource": [
+      "contacts"
+    ],
+    "method": "get",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/contacts/{contactId}",
+    "pathParams": [
+      "accountId",
+      "contactId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Get a contact",
+    "description": "One contact of the account's address book, by its number or its `lid:<digits>` id, from what wuapi stored (see `GET …/contacts` for what that holds). A number or id the address book does not hold answers `404 not_found`, even when the account has a chat with it: `POST …/contacts/lookup` asks WhatsApp about any number.",
     "deprecated": false
   },
   {
@@ -1156,7 +1216,7 @@ export const OPERATIONS: readonly Operation[] = [
     "body": [],
     "paginated": false,
     "summary": "Get a profile picture",
-    "description": "The contact's profile picture, if this account can see it.",
+    "description": "The profile picture of a contact, or the picture of a group: `{contactId}` also takes a group id (`120363041234567890@g.us`), which is how a chat list shows group pictures. `id` is the picture's id and `url` a WhatsApp URL that expires, so download it and keep it by `id`. `404 picture_not_found` when it has no picture or this account may not see it (the contact's privacy settings); a community's…",
     "deprecated": false
   },
   {
