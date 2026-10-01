@@ -501,7 +501,7 @@ export const OPERATIONS: readonly Operation[] = [
     "body": [],
     "paginated": true,
     "summary": "List chats",
-    "description": "The account's chats, the one with the newest message first: every conversation with a contact, group or channel that wuapi holds a message of, each with its latest message and WhatsApp's unread, pinned, archived and muted state. A state wuapi has never observed is `null` (see `Chat`). The filters combine, and a page of combined filters may hold fewer chats than `limit` while `nextCursor` is set:…",
+    "description": "The account's chats, the one with the newest message first: every conversation with a contact, group or channel that wuapi holds a message of, each with its latest message and WhatsApp's unread, pinned, archived and muted state. A state wuapi does not know yet is `null` (see `Chat`). The filters combine, and a page of combined filters may hold fewer chats than `limit` while `nextCursor` is set: k…",
     "deprecated": false
   },
   {

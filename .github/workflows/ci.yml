@@ -46,12 +46,14 @@ jobs:
         run: |
           range="$(node -p "require('./package.json').dependencies['@wuapidev/sdk']")"
           for attempt in $(seq 1 30); do
-            found="$(npm view "@wuapidev/sdk@${range}" version 2>/dev/null || true)"
-            if [ -n "$found" ]; then
-              echo "@wuapidev/sdk@${range} is on npm."
+            # The registry lists a new version a few minutes before its tarball can
+            # be downloaded (0.10.0: about five), and `npm install` then fails with
+            # E404. So download it, rather than only asking whether it is listed.
+            if npm pack "@wuapidev/sdk@${range}" --pack-destination "$RUNNER_TEMP" > /dev/null 2>&1; then
+              echo "@wuapidev/sdk@${range} is on npm and its tarball downloads."
               exit 0
             fi
-            echo "@wuapidev/sdk@${range} is not on npm yet (attempt ${attempt} of 30). Waiting 20 seconds."
+            echo "@wuapidev/sdk@${range} cannot be downloaded from npm yet (attempt ${attempt} of 30). Waiting 20 seconds."
             sleep 20
           done
           echo "::error::@wuapidev/sdk@${range} did not appear on npm within 10 minutes. Check the Release workflow of wuapidev/wuapi-typescript, then re-run this one."
@@ -87,12 +89,14 @@ jobs:
         run: |
           range="$(node -p "require('./package.json').dependencies['@wuapidev/sdk']")"
           for attempt in $(seq 1 30); do
-            found="$(npm view "@wuapidev/sdk@${range}" version 2>/dev/null || true)"
-            if [ -n "$found" ]; then
-              echo "@wuapidev/sdk@${range} is on npm."
+            # The registry lists a new version a few minutes before its tarball can
+            # be downloaded (0.10.0: about five), and `npm install` then fails with
+            # E404. So download it, rather than only asking whether it is listed.
+            if npm pack "@wuapidev/sdk@${range}" --pack-destination "$RUNNER_TEMP" > /dev/null 2>&1; then
+              echo "@wuapidev/sdk@${range} is on npm and its tarball downloads."
               exit 0
             fi
-            echo "@wuapidev/sdk@${range} is not on npm yet (attempt ${attempt} of 30). Waiting 20 seconds."
+            echo "@wuapidev/sdk@${range} cannot be downloaded from npm yet (attempt ${attempt} of 30). Waiting 20 seconds."
             sleep 20
           done
           echo "::error::@wuapidev/sdk@${range} did not appear on npm within 10 minutes. Check the Release workflow of wuapidev/wuapi-typescript, then re-run this one."
