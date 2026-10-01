@@ -39,6 +39,7 @@ Docs: [wuapi.dev/docs#cli](https://wuapi.dev/docs#cli).
 | `wuapi wait <invitationId \| accountId> [--timeout seconds]` | Wait until the number is linked and ready: an invitation from `link --no-wait` (default 900 s; fails when it fails, expires or is cancelled) or an account (default 300 s). |
 | `wuapi run [--profile <name>] -- <command> [args...]` | Run a command with `WUAPI_API_KEY` (plus `WUAPI_PROJECT` when the profile has a project, `WUAPI_BASE_URL` when it is not the default) in its environment only, and exit with its code. Your app, dev server or tests read `process.env.WUAPI_API_KEY` without a `.env`, like `op run` or `doppler run`. |
 | `wuapi send <to> <text> [--account <id>] [--wait]` | Send a text. `--account` can be left out when one account is ready. `--wait` waits until it is sent or failed. |
+| `wuapi send <to> [caption] --file <path> [--type <type>] [--mime-type <type>] [--filename <name>]` | Send a local file, up to 100 MB: it is uploaded, then sent by its upload id. The type (`image`, `video`, `audio`, `document`) and MIME type come from the file's extension; pass `--type voice` for an Ogg/Opus voice note, `--type sticker` for a WebP sticker, `--mime-type` for an extension the CLI does not know. |
 | `wuapi mcp add [--client claude\|cursor\|vscode] [--scope project\|user]` | Register the local MCP server (`npx -y @wuapidev/mcp`) with your client. No key goes into the client's config: the server uses your `wuapi login`. |
 
 ### Every API endpoint

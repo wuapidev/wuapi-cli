@@ -1057,7 +1057,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "media",
             "type": "object",
             "required": true,
-            "description": "An image or video for a story, fetched by our servers."
+            "description": "An image or video for a story: exactly one of `url` (a public URL our servers download) or `uploadId` (a file uploaded with `POST /v1/uploads`)."
           },
           {
             "name": "text",
@@ -1914,7 +1914,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "media",
             "type": "object",
             "required": true,
-            "description": "An image to send, fetched by our servers."
+            "description": "An image to send: exactly one of `url` (a public URL our servers download) or `uploadId` (a file uploaded with `POST /v1/uploads`)."
           },
           {
             "name": "text",
@@ -1991,7 +1991,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "media",
             "type": "object",
             "required": true,
-            "description": "A video to send, fetched by our servers."
+            "description": "A video to send: exactly one of `url` (a public URL our servers download) or `uploadId` (a file uploaded with `POST /v1/uploads`)."
           },
           {
             "name": "text",
@@ -2068,7 +2068,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "media",
             "type": "object",
             "required": true,
-            "description": "A file to send, fetched by our servers."
+            "description": "A file to send: exactly one of `url` (a public URL our servers download) or `uploadId` (a file uploaded with `POST /v1/uploads`)."
           },
           {
             "name": "text",
@@ -2145,7 +2145,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "media",
             "type": "object",
             "required": true,
-            "description": "A file to send, fetched by our servers."
+            "description": "A file to send: exactly one of `url` (a public URL our servers download) or `uploadId` (a file uploaded with `POST /v1/uploads`)."
           },
           {
             "name": "text",
@@ -2222,7 +2222,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "media",
             "type": "object",
             "required": true,
-            "description": "A file to send, fetched by our servers."
+            "description": "A file to send: exactly one of `url` (a public URL our servers download) or `uploadId` (a file uploaded with `POST /v1/uploads`)."
           },
           {
             "name": "text",
@@ -2293,7 +2293,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "media",
             "type": "object",
             "required": true,
-            "description": "A file to send, fetched by our servers."
+            "description": "A file to send: exactly one of `url` (a public URL our servers download) or `uploadId` (a file uploaded with `POST /v1/uploads`)."
           },
           {
             "name": "text",
@@ -3879,6 +3879,123 @@ export const OPERATIONS: readonly Operation[] = [
     "paginated": false,
     "summary": "Mark channel messages viewed",
     "description": "Count the account as a viewer of these messages.",
+    "deprecated": false
+  },
+  {
+    "operationId": "createUpload",
+    "resource": [
+      "uploads"
+    ],
+    "method": "create",
+    "httpMethod": "POST",
+    "path": "/v1/uploads",
+    "pathParams": [],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "FileUploadCreateRequest",
+        "fields": [
+          {
+            "name": "mimeType",
+            "type": "string",
+            "required": true,
+            "description": "The file's MIME type, such as `image/jpeg` or `audio/ogg; codecs=opus`. Sends use it as the message's `mimeType`."
+          },
+          {
+            "name": "size",
+            "type": "integer",
+            "required": true,
+            "description": "The file's size in bytes, at most 104857600 (100 MB). The file posted to `uploadUrl` must be exactly this size."
+          },
+          {
+            "name": "filename",
+            "type": "string",
+            "required": false,
+            "description": "The file name a recipient sees for a document."
+          }
+        ]
+      },
+      {
+        "name": "InlineUploadCreateRequest",
+        "fields": [
+          {
+            "name": "mimeType",
+            "type": "string",
+            "required": true,
+            "description": "The file's MIME type, such as `image/jpeg` or `audio/ogg; codecs=opus`. Sends use it as the message's `mimeType`."
+          },
+          {
+            "name": "base64",
+            "type": "string",
+            "required": true,
+            "description": "The file's bytes in base64 (standard or URL-safe alphabet), at most 5 MB (5242880 bytes) once decoded."
+          },
+          {
+            "name": "filename",
+            "type": "string",
+            "required": false,
+            "description": "The file name a recipient sees for a document."
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "Create an upload",
+    "description": "Start uploading a file to send. With `size`, the answer is `pending` and carries `uploadUrl`: `POST` the file's raw bytes to it (with the file's `Content-Type`, no `Authorization`), then call `POST /v1/uploads/{uploadId}/complete` with the `storageId` it answers. The bytes go straight to storage, so files up to 100 MB work. With `base64` (up to 5 MB), the file is stored now and the answer is alre…",
+    "deprecated": false
+  },
+  {
+    "operationId": "getUpload",
+    "resource": [
+      "uploads"
+    ],
+    "method": "get",
+    "httpMethod": "GET",
+    "path": "/v1/uploads/{uploadId}",
+    "pathParams": [
+      "uploadId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Get an upload",
+    "description": "The upload and whether it is `ready` to send. `uploadUrl` is always `null` here. An expired upload answers `404`.",
+    "deprecated": false
+  },
+  {
+    "operationId": "completeUpload",
+    "resource": [
+      "uploads"
+    ],
+    "method": "complete",
+    "httpMethod": "POST",
+    "path": "/v1/uploads/{uploadId}/complete",
+    "pathParams": [
+      "uploadId"
+    ],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "",
+        "fields": [
+          {
+            "name": "storageId",
+            "type": "string",
+            "required": true,
+            "description": "The `storageId` in the JSON answer of the `POST` of the bytes to `uploadUrl`."
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "Complete an upload",
+    "description": "Tell wuapi the bytes are in: pass the `storageId` that the `POST` to `uploadUrl` answered. The file's real size is read from storage and must be the `size` the upload declared (a file of another size is deleted and the upload stays `pending`). The answer is the upload, `ready` to send for 24 hours.",
     "deprecated": false
   },
   {

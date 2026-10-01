@@ -37,7 +37,8 @@ jobs:
     # Never from a fork or a copy of this repository.
     if: github.repository == 'wuapidev/wuapi-cli'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Up to 10 of these minutes are the wait for the SDK on npm.
+    timeout-minutes: 25
     permissions:
       contents: write # the v<version> tag and the GitHub Release
       id-token: write # npm trusted publishing (OIDC) and provenance
@@ -62,6 +63,24 @@ jobs:
 
       - name: Update npm
         run: npm install --global npm@^11.5.1 && npm --version
+
+      # The monorepo sync pushes every mirror at the same moment, so a change
+      # that bumps the SDK together with this package gets here before the new
+      # SDK is on npm, and `npm install` would fail with ETARGET. Wait for it.
+      - name: Wait for the @wuapidev/sdk version this package needs
+        run: |
+          range="$(node -p "require('./package.json').dependencies['@wuapidev/sdk']")"
+          for attempt in $(seq 1 30); do
+            found="$(npm view "@wuapidev/sdk@${range}" version 2>/dev/null || true)"
+            if [ -n "$found" ]; then
+              echo "@wuapidev/sdk@${range} is on npm."
+              exit 0
+            fi
+            echo "@wuapidev/sdk@${range} is not on npm yet (attempt ${attempt} of 30). Waiting 20 seconds."
+            sleep 20
+          done
+          echo "::error::@wuapidev/sdk@${range} did not appear on npm within 10 minutes. Check the Release workflow of wuapidev/wuapi-typescript, then re-run this one."
+          exit 1
 
       - name: Install
         run: npm install --no-audit --no-fund

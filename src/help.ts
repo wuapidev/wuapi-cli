@@ -18,7 +18,7 @@ const COMMANDS: [string, string][] = [
   ["link --here [--phone +E164] [--country XX]", "Link in this terminal (QR code here, or a pairing code); for a person, not agents"],
   ["wait <invitationId | accountId>", "Wait until the number is linked and ready"],
   ["run -- <command> [args...]", "Run a command with WUAPI_API_KEY in its environment only (no .env)"],
-  ["send <to> <text> [--account <id>] [--wait]", "Send a text message"],
+  ["send <to> <text> [--account <id>] [--wait]", "Send a text message, or a local file with --file <path>"],
   ["mcp add [--client claude|cursor|vscode] [--scope project|user]", "Set up the wuapi MCP server in your editor or agent"],
   ["me", "The current key's organization and project (API: GET /v1/me)"],
 ];
@@ -97,10 +97,16 @@ export const COMMAND_HELP: Record<string, string> = {
   ].join("\n"),
   send: [
     "Usage: wuapi send <to> <text> [--account <id>] [--wait] [--timeout 120] [--idempotency-key <key>]",
+    "       wuapi send <to> [caption] --file <path> [--type <type>] [--mime-type <type>] [--filename <name>]",
     "",
-    "Sends a text message. <to>: E.164 number, group id (…@g.us) or channel id.",
-    "  --account <id>   the account to send from (default: the only ready one)",
-    "  --wait           wait until it is sent, delivered or failed",
+    "Sends a text message, or a local file. <to>: E.164 number, group id (…@g.us) or channel id.",
+    "  --account <id>     the account to send from (default: the only ready one)",
+    "  --wait             wait until it is sent, delivered or failed",
+    "  --file <path>      upload this file (up to 100 MB) and send it; the text becomes its caption",
+    "  --type <type>      image, video, audio, voice, document or sticker (default: from the file's type)",
+    "  --mime-type <type> the file's MIME type (default: from its extension)",
+    "  --filename <name>  the name a document shows (default: the file's name)",
+    "A voice note is an Ogg/Opus file: wuapi send +5841... --file note.ogg --type voice",
     "Other message types: wuapi messages send --help",
   ].join("\n"),
   mcp: [

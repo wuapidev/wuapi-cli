@@ -31,7 +31,7 @@ export function mockFetch(routes: Record<string, Route>) {
     const key = `${init.method ?? "GET"} ${url.pathname}`;
     const headers: Record<string, string> = {};
     for (const [k, v] of Object.entries((init.headers ?? {}) as Record<string, string>)) headers[k.toLowerCase()] = v;
-    const call: Call = { method: init.method ?? "GET", url: input, path: url.pathname, headers, body: init.body ? JSON.parse(String(init.body)) : undefined };
+    const call: Call = { method: init.method ?? "GET", url: input, path: url.pathname, headers, body: typeof init.body === "string" ? JSON.parse(init.body) : init.body };
     calls.push(call);
     const route = routes[key];
     if (!route) return new Response(JSON.stringify({ code: "not_found", message: `no route ${key}` }), { status: 404 });
