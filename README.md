@@ -53,6 +53,7 @@ wuapi accounts list
 wuapi messages list --accountId acc_1 --limit 5
 wuapi groups get acc_1 120363012345678901@g.us
 wuapi messages send --accountId acc_1 --to +584121234567 --type image --media.url https://example.com/a.jpg
+wuapi messages forward msg_1 --to '["+584121234567","120363012345678901@g.us"]'
 wuapi webhook-endpoints create --url https://example.com/hook --events '["message.received"]'
 wuapi projects api-keys list prj_1 --all
 wuapi me

@@ -1001,6 +1001,51 @@ export const OPERATIONS: readonly Operation[] = [
     "deprecated": false
   },
   {
+    "operationId": "listStories",
+    "resource": [
+      "stories"
+    ],
+    "method": "list",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/stories",
+    "pathParams": [
+      "accountId"
+    ],
+    "query": [
+      {
+        "name": "contactId",
+        "type": "string",
+        "required": false,
+        "description": "Only this contact's stories: an E.164 number, bare digits or `lid:<digits>` (the `contactId` of a group). At most one group comes back."
+      },
+      {
+        "name": "unviewed",
+        "type": "boolean",
+        "required": false,
+        "description": "`true`: only the contacts with a story the account has not seen. A page may then hold fewer groups than `limit` while `nextCursor` is set: keep following the cursor."
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "description": "Page size, 1 to 100."
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false,
+        "description": "Opaque cursor from a previous page's `nextCursor`. An invalid or expired cursor answers `400 invalid_request`."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": true,
+    "summary": "List contacts' stories",
+    "description": "The stories the account's contacts posted in the last 24 hours, grouped by author: one `story_group` per contact, the contact with the newest story first, each with its stories oldest first. `limit` counts groups. Stored stories only, so the account does not need to be `ready`.",
+    "deprecated": false
+  },
+  {
     "operationId": "createStory",
     "resource": [
       "stories"
@@ -1070,7 +1115,198 @@ export const OPERATIONS: readonly Operation[] = [
     ],
     "paginated": false,
     "summary": "Post a story",
-    "description": "Queued like any send and stored as an outbound message with `chatId: stories`. The outcome arrives as `message.sent` or `message.failed`.",
+    "description": "Queued like any send and stored as an outbound message with `chatId: stories`; that message's id is also the story's id (`GET .../stories/own`, `GET .../stories/{storyId}/viewers`, `DELETE .../stories/{storyId}`). The outcome arrives as `message.sent` or `message.failed`. It goes to the audience of the account's story privacy (`GET .../privacy/stories`).",
+    "deprecated": false
+  },
+  {
+    "operationId": "listOwnStories",
+    "resource": [
+      "stories"
+    ],
+    "method": "listOwn",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/stories/own",
+    "pathParams": [
+      "accountId"
+    ],
+    "query": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "description": "Page size, 1 to 100."
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false,
+        "description": "Opaque cursor from a previous page's `nextCursor`. An invalid or expired cursor answers `400 invalid_request`."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": true,
+    "summary": "List the account's stories",
+    "description": "The stories the account posted in the last 24 hours, newest first, each with `viewCount`: posted through the API, and, once stories are on for the account, from its phone too. Deleted stories are left out; one still `queued` or `failed` is listed with `postedAt: null`. Older ones stay readable as messages (`GET /v1/messages?chatId=stories`). A page may hold fewer stories than `limit` while `nextC…",
+    "deprecated": false
+  },
+  {
+    "operationId": "getStory",
+    "resource": [
+      "stories"
+    ],
+    "method": "get",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/stories/{storyId}",
+    "pathParams": [
+      "accountId",
+      "storyId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Get a story",
+    "description": "One story: a contact's (while it has not expired; afterwards `404`) or one the account posted. Reading it does not mark it as viewed.",
+    "deprecated": false
+  },
+  {
+    "operationId": "deleteStory",
+    "resource": [
+      "stories"
+    ],
+    "method": "delete",
+    "httpMethod": "DELETE",
+    "path": "/v1/accounts/{accountId}/stories/{storyId}",
+    "pathParams": [
+      "accountId",
+      "storyId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Delete a story",
+    "description": "Delete a story the account posted, for everyone: WhatsApp removes it from the phones of every contact, `deletedAt` is set on it and `message.deleted` fires. A story still `queued` is cancelled instead (`message.failed`, `error.code: cancelled`). Deleting an already deleted story answers `204` again. A contact's story cannot be deleted: `400`.",
+    "deprecated": false
+  },
+  {
+    "operationId": "getStoryMedia",
+    "resource": [
+      "stories"
+    ],
+    "method": "getMedia",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/stories/{storyId}/media",
+    "pathParams": [
+      "accountId",
+      "storyId"
+    ],
+    "query": [
+      {
+        "name": "redirect",
+        "type": "boolean",
+        "required": false,
+        "description": "`false` answers JSON with the file's URL instead of the `302` redirect."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Get a story's media",
+    "description": "The story's file. By default the answer is `302 Found` to the file (no API key needed there). With `redirect=false`, or an `Accept` header that names only `application/json` (the SDKs), the answer is this JSON with the file's URL instead.",
+    "deprecated": false
+  },
+  {
+    "operationId": "listStoryViewers",
+    "resource": [
+      "stories"
+    ],
+    "method": "listViewers",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/stories/{storyId}/viewers",
+    "pathParams": [
+      "accountId",
+      "storyId"
+    ],
+    "query": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "description": "Page size, 1 to 100."
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false,
+        "description": "Opaque cursor from a previous page's `nextCursor`. An invalid or expired cursor answers `400 invalid_request`."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": true,
+    "summary": "List a story's viewers",
+    "description": "Who saw a story the account posted, the latest viewer first, each with their reaction when they sent one. It is what WhatsApp reports through read receipts: contacts with read receipts off are not listed, and with the account's own `readReceipts` privacy set to `none` WhatsApp reports no viewer at all. Viewers are kept for 7 days after the story expires. A contact's story answers `400`.",
+    "deprecated": false
+  },
+  {
+    "operationId": "viewStory",
+    "resource": [
+      "stories"
+    ],
+    "method": "view",
+    "httpMethod": "POST",
+    "path": "/v1/accounts/{accountId}/stories/{storyId}/view",
+    "pathParams": [
+      "accountId",
+      "storyId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Mark a story as viewed",
+    "description": "Tell the author of a contact's story that the account saw it: wuapi sends WhatsApp one read receipt for that story, which puts the account on the story's viewer list, and sets `viewedAt`. This is the only call that does it: listing stories, reading one or downloading its file never sends a receipt, and wuapi never views a story on its own. Call it when a person actually opens the story.",
+    "deprecated": false
+  },
+  {
+    "operationId": "reactToStory",
+    "resource": [
+      "stories"
+    ],
+    "method": "react",
+    "httpMethod": "POST",
+    "path": "/v1/accounts/{accountId}/stories/{storyId}/react",
+    "pathParams": [
+      "accountId",
+      "storyId"
+    ],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "",
+        "fields": [
+          {
+            "name": "emoji",
+            "type": "string",
+            "required": true,
+            "description": "One emoji. An empty string removes the reaction."
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "React to a story",
+    "description": "React to a contact's story with an emoji (the heart the WhatsApp apps send is `💚`); an empty string removes the reaction. Only the story's author receives it, and sees it next to the account in the story's viewers. The story's `reaction` keeps it.",
     "deprecated": false
   },
   {
@@ -1723,6 +1959,131 @@ export const OPERATIONS: readonly Operation[] = [
     "deprecated": false
   },
   {
+    "operationId": "listFavoriteStickers",
+    "resource": [
+      "favoriteStickers"
+    ],
+    "method": "list",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/stickers/favorites",
+    "pathParams": [
+      "accountId"
+    ],
+    "query": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "description": "Page size, 1 to 100."
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false,
+        "description": "Opaque cursor from a previous page's `nextCursor`. An invalid or expired cursor answers `400 invalid_request`."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": true,
+    "summary": "List favorite stickers",
+    "description": "The account's favorite stickers, the last one favorited first, as WhatsApp's sticker picker shows them. Read from what wuapi stored, without asking WhatsApp, so it works while the account is not `ready`.",
+    "deprecated": false
+  },
+  {
+    "operationId": "addFavoriteSticker",
+    "resource": [
+      "favoriteStickers"
+    ],
+    "method": "add",
+    "httpMethod": "POST",
+    "path": "/v1/accounts/{accountId}/stickers/favorites",
+    "pathParams": [
+      "accountId"
+    ],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "FavoriteStickerFromMessage",
+        "fields": [
+          {
+            "name": "messageId",
+            "type": "string",
+            "required": true,
+            "description": "A message of this account with `type: sticker`. Its file must still be reachable: on WhatsApp (a received sticker not fetched yet), stored by wuapi, or at the URL it was sent from."
+          }
+        ]
+      },
+      {
+        "name": "FavoriteStickerFromUpload",
+        "fields": [
+          {
+            "name": "uploadId",
+            "type": "string",
+            "required": true,
+            "description": "The id of a `ready` upload (`POST /v1/uploads`) with `mimeType: image/webp`, at most 2 MB. WhatsApp shows a sticker best at 512x512 pixels. The upload is not used up: it can still be sent."
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "Add a favorite sticker",
+    "description": "Favorite a sticker, so it appears in the star tab of the sticker picker on the phone and on every linked device. The change is written to WhatsApp; the account must be `ready`.",
+    "deprecated": false
+  },
+  {
+    "operationId": "removeFavoriteSticker",
+    "resource": [
+      "favoriteStickers"
+    ],
+    "method": "remove",
+    "httpMethod": "DELETE",
+    "path": "/v1/accounts/{accountId}/stickers/favorites/{stickerId}",
+    "pathParams": [
+      "accountId",
+      "stickerId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Remove a favorite sticker",
+    "description": "Take a sticker out of the account's favorites, on the phone and on every linked device. The change is written to WhatsApp; the account must be `ready`.",
+    "deprecated": false
+  },
+  {
+    "operationId": "getFavoriteStickerMedia",
+    "resource": [
+      "favoriteStickers"
+    ],
+    "method": "getMedia",
+    "httpMethod": "GET",
+    "path": "/v1/accounts/{accountId}/stickers/favorites/{stickerId}/media",
+    "pathParams": [
+      "accountId",
+      "stickerId"
+    ],
+    "query": [
+      {
+        "name": "redirect",
+        "type": "boolean",
+        "required": false,
+        "description": "`false` answers JSON with the file's URL instead of the `302` redirect."
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Get a favorite sticker's file",
+    "description": "The sticker's file. By default the answer is `302 Found` to the file (no API key needed there), so `curl -L`, browsers and HTTP clients download it directly. With `redirect=false`, or an `Accept` header that names only `application/json` (the SDKs), the answer is this JSON with the file's URL instead.",
+    "deprecated": false
+  },
+  {
     "operationId": "getOrder",
     "resource": [
       "orders"
@@ -1861,7 +2222,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "disappearingSeconds",
@@ -1879,7 +2240,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -1938,7 +2305,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "viewOnce",
@@ -1956,7 +2323,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2015,7 +2388,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "viewOnce",
@@ -2033,7 +2406,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2092,7 +2471,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "viewOnce",
@@ -2110,7 +2489,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2169,7 +2554,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "viewOnce",
@@ -2187,7 +2572,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2246,7 +2637,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "disappearingSeconds",
@@ -2258,7 +2649,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2317,7 +2714,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "disappearingSeconds",
@@ -2329,7 +2726,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2382,7 +2785,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "disappearingSeconds",
@@ -2394,7 +2797,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2447,7 +2856,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "disappearingSeconds",
@@ -2459,7 +2868,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2512,7 +2927,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "disappearingSeconds",
@@ -2524,7 +2939,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2577,7 +2998,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "disappearingSeconds",
@@ -2589,7 +3010,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2642,7 +3069,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "forwarded",
             "type": "boolean",
             "required": false,
-            "description": "Mark as forwarded."
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
           },
           {
             "name": "disappearingSeconds",
@@ -2654,7 +3081,13 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts."
+            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
           },
           {
             "name": "metadata",
@@ -2838,6 +3271,38 @@ export const OPERATIONS: readonly Operation[] = [
     "paginated": false,
     "summary": "Vote in a poll",
     "description": "Options are validated against the stored poll. Returns the poll with its tally, your vote included.",
+    "deprecated": false
+  },
+  {
+    "operationId": "forwardMessage",
+    "resource": [
+      "messages"
+    ],
+    "method": "forward",
+    "httpMethod": "POST",
+    "path": "/v1/messages/{messageId}/forward",
+    "pathParams": [
+      "messageId"
+    ],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "",
+        "fields": [
+          {
+            "name": "to",
+            "type": "string[]",
+            "required": true,
+            "description": "The chats to forward to, each named once: contact ids (E.164, bare digits or `lid:<digits>`) or group ids, of the same account as the message. At most 5, WhatsApp's limit per forward; exactly 1 when…"
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "Forward a message",
+    "description": "Forward a message wuapi stores (received, sent through the API or sent from the phone) to one or several chats of the same account, the way WhatsApp forwards: the recipients get the original content with the \"Forwarded\" label, and \"Forwarded many times\" once it went through five forwards.",
     "deprecated": false
   },
   {
@@ -4059,7 +4524,7 @@ export const OPERATIONS: readonly Operation[] = [
           },
           {
             "name": "events",
-            "type": "\"account.qr_code_issued\" | \"account.pairing_code_issued\" | \"account.connected\" | \"account.disconnected\" | \"account.failed\" | \"message.received\" | \"message.sent\" | \"message.delivered\" | \"message.read\" | \"message.failed\" | \"message.edited\" | \"message.deleted\" | \"message.media_downloaded\" | \"poll.voted\" | \"group.joined\" | \"group.updated\" | \"group.join_requested\" | \"group.join_request_revoked\" | \"chat.updated\" | \"chat.presence_updated\" | \"contact.presence_updated\" | \"contact.picture_updated\" | \"contact.updated\" | \"blocklist.updated\" | \"label.updated\" | \"call.received\" | \"call.ended\" | \"channel.message_received\" | \"channel.message_updated\" | \"channel.updated\" | \"history.synced\" | \"project.created\" | \"project.updated\" | \"project.deleted\" | \"invitation.status_changed\" | \"webhook.test\"[]",
+            "type": "\"account.qr_code_issued\" | \"account.pairing_code_issued\" | \"account.connected\" | \"account.disconnected\" | \"account.failed\" | \"message.received\" | \"message.sent\" | \"message.delivered\" | \"message.read\" | \"message.failed\" | \"message.edited\" | \"message.deleted\" | \"message.media_downloaded\" | \"story.received\" | \"story.deleted\" | \"story.viewed\" | \"story.reacted\" | \"poll.voted\" | \"group.joined\" | \"group.updated\" | \"group.join_requested\" | \"group.join_request_revoked\" | \"chat.updated\" | \"chat.presence_updated\" | \"contact.presence_updated\" | \"contact.picture_updated\" | \"contact.updated\" | \"blocklist.updated\" | \"sticker.favorites_updated\" | \"label.updated\" | \"call.received\" | \"call.ended\" | \"channel.message_received\" | \"channel.message_updated\" | \"channel.updated\" | \"history.synced\" | \"project.created\" | \"project.updated\" | \"project.deleted\" | \"invitation.status_changed\" | \"webhook.test\"[]",
             "required": true,
             "description": ""
           },
@@ -4123,7 +4588,7 @@ export const OPERATIONS: readonly Operation[] = [
           },
           {
             "name": "events",
-            "type": "\"account.qr_code_issued\" | \"account.pairing_code_issued\" | \"account.connected\" | \"account.disconnected\" | \"account.failed\" | \"message.received\" | \"message.sent\" | \"message.delivered\" | \"message.read\" | \"message.failed\" | \"message.edited\" | \"message.deleted\" | \"message.media_downloaded\" | \"poll.voted\" | \"group.joined\" | \"group.updated\" | \"group.join_requested\" | \"group.join_request_revoked\" | \"chat.updated\" | \"chat.presence_updated\" | \"contact.presence_updated\" | \"contact.picture_updated\" | \"contact.updated\" | \"blocklist.updated\" | \"label.updated\" | \"call.received\" | \"call.ended\" | \"channel.message_received\" | \"channel.message_updated\" | \"channel.updated\" | \"history.synced\" | \"project.created\" | \"project.updated\" | \"project.deleted\" | \"invitation.status_changed\" | \"webhook.test\"[]",
+            "type": "\"account.qr_code_issued\" | \"account.pairing_code_issued\" | \"account.connected\" | \"account.disconnected\" | \"account.failed\" | \"message.received\" | \"message.sent\" | \"message.delivered\" | \"message.read\" | \"message.failed\" | \"message.edited\" | \"message.deleted\" | \"message.media_downloaded\" | \"story.received\" | \"story.deleted\" | \"story.viewed\" | \"story.reacted\" | \"poll.voted\" | \"group.joined\" | \"group.updated\" | \"group.join_requested\" | \"group.join_request_revoked\" | \"chat.updated\" | \"chat.presence_updated\" | \"contact.presence_updated\" | \"contact.picture_updated\" | \"contact.updated\" | \"blocklist.updated\" | \"sticker.favorites_updated\" | \"label.updated\" | \"call.received\" | \"call.ended\" | \"channel.message_received\" | \"channel.message_updated\" | \"channel.updated\" | \"history.synced\" | \"project.created\" | \"project.updated\" | \"project.deleted\" | \"invitation.status_changed\" | \"webhook.test\"[]",
             "required": false,
             "description": ""
           },

@@ -25,7 +25,7 @@ jobs:
   node:
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -45,18 +45,18 @@ jobs:
       - name: Wait for the @wuapidev/sdk version this package needs
         run: |
           range="$(node -p "require('./package.json').dependencies['@wuapidev/sdk']")"
-          for attempt in $(seq 1 30); do
+          for attempt in $(seq 1 60); do
             # The registry lists a new version a few minutes before its tarball can
-            # be downloaded (0.10.0: about five), and `npm install` then fails with
+            # be downloaded (0.10.0: about five minutes, 0.11.0: more than ten), and `npm install` then fails with
             # E404. So download it, rather than only asking whether it is listed.
             if npm pack "@wuapidev/sdk@${range}" --pack-destination "$RUNNER_TEMP" > /dev/null 2>&1; then
               echo "@wuapidev/sdk@${range} is on npm and its tarball downloads."
               exit 0
             fi
-            echo "@wuapidev/sdk@${range} cannot be downloaded from npm yet (attempt ${attempt} of 30). Waiting 20 seconds."
-            sleep 20
+            echo "@wuapidev/sdk@${range} cannot be downloaded from npm yet (attempt ${attempt} of 60). Waiting 30 seconds."
+            sleep 30
           done
-          echo "::error::@wuapidev/sdk@${range} did not appear on npm within 10 minutes. Check the Release workflow of wuapidev/wuapi-typescript, then re-run this one."
+          echo "::error::@wuapidev/sdk@${range} could not be downloaded from npm within 30 minutes. Check the Release workflow of wuapidev/wuapi-typescript, then re-run this one."
           exit 1
 
       - name: Install
@@ -76,7 +76,7 @@ jobs:
   bun:
     name: Bun
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
@@ -88,18 +88,18 @@ jobs:
       - name: Wait for the @wuapidev/sdk version this package needs
         run: |
           range="$(node -p "require('./package.json').dependencies['@wuapidev/sdk']")"
-          for attempt in $(seq 1 30); do
+          for attempt in $(seq 1 60); do
             # The registry lists a new version a few minutes before its tarball can
-            # be downloaded (0.10.0: about five), and `npm install` then fails with
+            # be downloaded (0.10.0: about five minutes, 0.11.0: more than ten), and `npm install` then fails with
             # E404. So download it, rather than only asking whether it is listed.
             if npm pack "@wuapidev/sdk@${range}" --pack-destination "$RUNNER_TEMP" > /dev/null 2>&1; then
               echo "@wuapidev/sdk@${range} is on npm and its tarball downloads."
               exit 0
             fi
-            echo "@wuapidev/sdk@${range} cannot be downloaded from npm yet (attempt ${attempt} of 30). Waiting 20 seconds."
-            sleep 20
+            echo "@wuapidev/sdk@${range} cannot be downloaded from npm yet (attempt ${attempt} of 60). Waiting 30 seconds."
+            sleep 30
           done
-          echo "::error::@wuapidev/sdk@${range} did not appear on npm within 10 minutes. Check the Release workflow of wuapidev/wuapi-typescript, then re-run this one."
+          echo "::error::@wuapidev/sdk@${range} could not be downloaded from npm within 30 minutes. Check the Release workflow of wuapidev/wuapi-typescript, then re-run this one."
           exit 1
 
       - name: Install
