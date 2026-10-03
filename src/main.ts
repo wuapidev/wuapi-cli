@@ -4,6 +4,7 @@ import { parseArgs } from "./args.js";
 import { makeCtx, type Ctx } from "./context.js";
 import { dispatch, findOperation } from "./dispatch.js";
 import { toErrorBody, usage } from "./errors.js";
+import { events } from "./events.js";
 import { help } from "./help.js";
 import type { Io } from "./io.js";
 import { link, wait } from "./link.js";
@@ -24,6 +25,7 @@ const COMMANDS: Record<string, (ctx: Ctx) => void | number | Promise<void | numb
   link,
   wait,
   send,
+  events,
   mcp,
   run: runCommand,
 };

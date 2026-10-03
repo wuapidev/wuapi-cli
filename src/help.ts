@@ -3,6 +3,7 @@
 import { emit, type Ctx } from "./context.js";
 import { commandName, kebab, resources, usageLine } from "./dispatch.js";
 import { usage } from "./errors.js";
+import { EVENTS_HELP } from "./events.js";
 import { OPERATIONS } from "./generated/operations.js";
 import type { Operation, OperationField } from "./operation.js";
 import { VERSION } from "./version.js";
@@ -19,6 +20,7 @@ const COMMANDS: [string, string][] = [
   ["wait <invitationId | accountId>", "Wait until the number is linked and ready"],
   ["run -- <command> [args...]", "Run a command with WUAPI_API_KEY in its environment only (no .env)"],
   ["send <to> <text> [--account <id>] [--wait]", "Send a text message, or a local file with --file <path>"],
+  ["events stream [--types a,b] [--accounts id,id] [--count n]", "Streams: print events live, one JSON event per line, reconnecting by itself"],
   ["mcp add [--client claude|cursor|vscode] [--scope project|user]", "Set up the wuapi MCP server in your editor or agent"],
   ["me", "The current key's organization and project (API: GET /v1/me)"],
 ];
@@ -109,6 +111,7 @@ export const COMMAND_HELP: Record<string, string> = {
     "A voice note is an Ogg/Opus file: wuapi send +5841... --file note.ogg --type voice",
     "Other message types: wuapi messages send --help",
   ].join("\n"),
+  events: EVENTS_HELP,
   mcp: [
     "Usage: wuapi mcp add [--client claude|cursor|vscode] [--scope project|user]",
     "",
