@@ -5,6 +5,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { hostname, homedir } from "node:os";
 import { delimiter, join } from "node:path";
 import { existsSync } from "node:fs";
+import type { StreamRuntime } from "@wuapidev/sdk";
 
 export interface RunResult {
   status: number | null;
@@ -27,6 +28,11 @@ export interface Io {
   fetch: typeof fetch;
   sleep(ms: number): Promise<void>;
   now(): number;
+  /**
+   * The clock and the random number of the stream client. Unset in production
+   * (it uses the real ones, jitter included); tests set it to script both.
+   */
+  streamRuntime?: StreamRuntime;
   /** Opens a URL or file in the browser / default app. Best effort, never throws. */
   open(target: string): void;
   /** Whether a command is on PATH. */
