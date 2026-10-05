@@ -3413,13 +3413,19 @@ export const OPERATIONS: readonly Operation[] = [
             "type": "boolean",
             "required": false,
             "description": "Create a community instead of a group; `participants` may be empty."
+          },
+          {
+            "name": "communityId",
+            "type": "string",
+            "required": false,
+            "description": "Create the group inside this community (its group id, `...@g.us`): it becomes one of the community's subgroups. Cannot be combined with `community`. `400 not_supported` while the account's engine can…"
           }
         ]
       }
     ],
     "paginated": false,
     "summary": "Create a group or community",
-    "description": "With `community: true`, creates a community (`participants` may be empty); link groups to it with `POST .../groups/{groupId}/subgroups`.",
+    "description": "With `community: true`, creates a community (`participants` may be empty); link groups to it with `POST .../groups/{groupId}/subgroups`. With `communityId`, creates the group inside that community (the group's `communityId` is then that id). The two cannot be combined: `400 invalid_request`. While the account's engine cannot create a group inside a community yet, `communityId` answers `400 not_su…",
     "deprecated": false
   },
   {
