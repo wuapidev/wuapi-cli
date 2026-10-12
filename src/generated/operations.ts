@@ -4653,6 +4653,169 @@ export const OPERATIONS: readonly Operation[] = [
     "deprecated": false
   },
   {
+    "operationId": "listIncomingWebhooks",
+    "resource": [
+      "incomingWebhooks"
+    ],
+    "method": "list",
+    "httpMethod": "GET",
+    "path": "/v1/incoming-webhooks",
+    "pathParams": [],
+    "query": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "description": "Page size, 1 to 100."
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false,
+        "description": "Opaque cursor from a previous page's `nextCursor`. An invalid or expired cursor answers `400 invalid_request`."
+      },
+      {
+        "name": "projectId",
+        "type": "string",
+        "required": false,
+        "description": "Filter by project: a project id, `ext:<externalId>`, or `none` for resources in no project. With an organization scope and no filter, the list covers every project and the unassigned resources. With…"
+      }
+    ],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": true,
+    "summary": "List incoming webhooks",
+    "description": "The incoming webhooks in scope, with their URLs. Filter with `projectId`.",
+    "deprecated": false
+  },
+  {
+    "operationId": "createIncomingWebhook",
+    "resource": [
+      "incomingWebhooks"
+    ],
+    "method": "create",
+    "httpMethod": "POST",
+    "path": "/v1/incoming-webhooks",
+    "pathParams": [],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "",
+        "fields": [
+          {
+            "name": "accountId",
+            "type": "string",
+            "required": true,
+            "description": "The account to send from. A project key can use only its own project's accounts."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true,
+            "description": "A label for you. 1 to 60 characters."
+          },
+          {
+            "name": "to",
+            "type": "string",
+            "required": true,
+            "description": "The fixed destination: `+584121234567`, `lid:<digits>` or a group `...@g.us`."
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "Create an incoming webhook",
+    "description": "Ties a new secret URL to one of your accounts and one fixed destination. At most 50 per organization; one more answers `400 limit_reached`. Anything that can reach the URL can send to `to`, and only to it.",
+    "deprecated": false
+  },
+  {
+    "operationId": "getIncomingWebhook",
+    "resource": [
+      "incomingWebhooks"
+    ],
+    "method": "get",
+    "httpMethod": "GET",
+    "path": "/v1/incoming-webhooks/{incomingWebhookId}",
+    "pathParams": [
+      "incomingWebhookId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Get an incoming webhook",
+    "description": "The hook with its current URL.",
+    "deprecated": false
+  },
+  {
+    "operationId": "updateIncomingWebhook",
+    "resource": [
+      "incomingWebhooks"
+    ],
+    "method": "update",
+    "httpMethod": "PATCH",
+    "path": "/v1/incoming-webhooks/{incomingWebhookId}",
+    "pathParams": [
+      "incomingWebhookId"
+    ],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": ""
+          },
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "required": false,
+            "description": "`false` pauses the hook: its URL answers `403` until it is enabled again."
+          },
+          {
+            "name": "rotateUrl",
+            "type": "boolean",
+            "required": false,
+            "description": "`true` issues a new URL; the old one stops working at once. The response carries the new `url`."
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "Update an incoming webhook",
+    "description": "Rename it, pause it with `enabled: false`, or issue a new URL with `rotateUrl: true` when the old one leaked. The destination cannot change: create another hook for that.",
+    "deprecated": false
+  },
+  {
+    "operationId": "deleteIncomingWebhook",
+    "resource": [
+      "incomingWebhooks"
+    ],
+    "method": "delete",
+    "httpMethod": "DELETE",
+    "path": "/v1/incoming-webhooks/{incomingWebhookId}",
+    "pathParams": [
+      "incomingWebhookId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Delete an incoming webhook",
+    "description": "Its URL stops working at once.",
+    "deprecated": false
+  },
+  {
     "operationId": "listProjects",
     "resource": [
       "projects"
