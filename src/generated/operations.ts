@@ -2240,7 +2240,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2323,7 +2323,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2406,7 +2406,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2489,7 +2489,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2572,7 +2572,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2649,7 +2649,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2726,7 +2726,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2797,7 +2797,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2868,7 +2868,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -2939,7 +2939,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -3010,7 +3010,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
@@ -3081,7 +3081,7 @@ export const OPERATIONS: readonly Operation[] = [
             "name": "replyToMessageId",
             "type": "string",
             "required": false,
-            "description": "A wuapi message id in the same chat to quote. Any type. Not for channel posts. Not together with `replyToStoryId`."
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
           },
           {
             "name": "replyToStoryId",
