@@ -278,6 +278,12 @@ export const OPERATIONS: readonly Operation[] = [
             "description": "What this account's image messages are re-encoded to before their upload. Applies to images sent from then on; a send that names `media.quality` keeps its own."
           },
           {
+            "name": "contactAutoSave",
+            "type": "object",
+            "required": false,
+            "description": "Save the contacts of new chats on the phone automatically. Applies to chats from then on; `POST …/contacts/auto-save/backfill` queues the existing ones."
+          },
+          {
             "name": "proxyLocation",
             "type": "object",
             "required": false,
@@ -1413,6 +1419,58 @@ export const OPERATIONS: readonly Operation[] = [
     "deprecated": false
   },
   {
+    "operationId": "saveContacts",
+    "resource": [
+      "contacts"
+    ],
+    "method": "saveMany",
+    "httpMethod": "POST",
+    "path": "/v1/accounts/{accountId}/contacts/batch",
+    "pathParams": [
+      "accountId"
+    ],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "",
+        "fields": [
+          {
+            "name": "contacts",
+            "type": "object[]",
+            "required": true,
+            "description": ""
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "Save contacts on the phone in bulk",
+    "description": "Queues up to 500 contact saves at once, like `PATCH …/contacts/{contactId}` for each; they go to the phone in as few WhatsApp changes as possible. Each contact's `phoneSync` and `contact.updated` tell how it ended.",
+    "deprecated": false
+  },
+  {
+    "operationId": "backfillContactAutoSave",
+    "resource": [
+      "contacts"
+    ],
+    "method": "backfillAutoSave",
+    "httpMethod": "POST",
+    "path": "/v1/accounts/{accountId}/contacts/auto-save/backfill",
+    "pathParams": [
+      "accountId"
+    ],
+    "query": [],
+    "hasBody": false,
+    "bodyRequired": false,
+    "body": [],
+    "paginated": false,
+    "summary": "Auto-save the contacts of existing chats",
+    "description": "Queues the auto-save of the contacts of the account's existing direct chats, named with its `contactAutoSave` templates (whether or not auto-save is enabled). The same rules apply: contacts the phone already holds a name for, and contacts written before, are left alone, and at most `dailyLimit` saves go out per UTC day. Calling it again queues only what is new.",
+    "deprecated": false
+  },
+  {
     "operationId": "getContact",
     "resource": [
       "contacts"
@@ -1430,7 +1488,46 @@ export const OPERATIONS: readonly Operation[] = [
     "body": [],
     "paginated": false,
     "summary": "Get a contact",
-    "description": "One contact of the account's address book, by its number or its `lid:<digits>` id, from what wuapi stored (see `GET …/contacts` for what that holds). A number or id the address book does not hold answers `404 not_found`, even when the account has a chat with it: `POST …/contacts/lookup` asks WhatsApp about any number.",
+    "description": "One contact of the account's address book, by its number or its `lid:<digits>` id, from what wuapi stored (see `GET …/contacts` for what that holds). A number or id the address book does not hold answers `404 not_found`, even when the account has a chat with it, unless a name was saved for it through wuapi (`PATCH …/contacts/{contactId}`, see `phoneSync`): `POST …/contacts/lookup` asks WhatsApp a…",
+    "deprecated": false
+  },
+  {
+    "operationId": "updateContact",
+    "resource": [
+      "contacts"
+    ],
+    "method": "update",
+    "httpMethod": "PATCH",
+    "path": "/v1/accounts/{accountId}/contacts/{contactId}",
+    "pathParams": [
+      "accountId",
+      "contactId"
+    ],
+    "query": [],
+    "hasBody": true,
+    "bodyRequired": true,
+    "body": [
+      {
+        "name": "",
+        "fields": [
+          {
+            "name": "savedName",
+            "type": "string",
+            "required": true,
+            "description": "The name to save the contact under. `null` (removing the contact) is not supported: `400 not_supported`."
+          },
+          {
+            "name": "firstName",
+            "type": "string",
+            "required": false,
+            "description": "The short name the phone shows. Defaults to the first word of `savedName`."
+          }
+        ]
+      }
+    ],
+    "paginated": false,
+    "summary": "Save a contact on the phone",
+    "description": "Saves the contact under `savedName` on the account's phone: in WhatsApp and in the phone's own address book, as if it were saved on the phone. Any number can be saved, not only the ones the address book holds (a `lid:<digits>` contact needs its number known). The change is queued and answered `202` with the contact, its new `savedName` and `phoneSync.status: pending`: it is sent right away when t…",
     "deprecated": false
   },
   {
