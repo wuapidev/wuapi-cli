@@ -3124,6 +3124,89 @@ export const OPERATIONS: readonly Operation[] = [
         ]
       },
       {
+        "name": "buttons",
+        "fields": [
+          {
+            "name": "accountId",
+            "type": "string",
+            "required": true,
+            "description": "The account to send from. It must be `ready`."
+          },
+          {
+            "name": "to",
+            "type": "string",
+            "required": true,
+            "description": "A contact id (E.164, digits or `lid:<digits>`) or a group id. Channels take only `text`, `image`, `video` and `document`."
+          },
+          {
+            "name": "type",
+            "type": "\"buttons\"",
+            "required": true,
+            "description": "`buttons`."
+          },
+          {
+            "name": "text",
+            "type": "string",
+            "required": true,
+            "description": "The message body."
+          },
+          {
+            "name": "footer",
+            "type": "string",
+            "required": false,
+            "description": "Small print under the buttons."
+          },
+          {
+            "name": "buttons",
+            "type": "object[]",
+            "required": true,
+            "description": "1 to 10 buttons: quick replies and/or links."
+          },
+          {
+            "name": "mentions",
+            "type": "string[]",
+            "required": false,
+            "description": "Contact ids to mention. At most 256. Not for channel posts."
+          },
+          {
+            "name": "mentionAll",
+            "type": "boolean",
+            "required": false,
+            "description": "Groups only: mention every participant."
+          },
+          {
+            "name": "forwarded",
+            "type": "boolean",
+            "required": false,
+            "description": "Mark this new message as forwarded: the recipient sees the \"Forwarded\" label on content you supply. To forward a message wuapi already stores (its text, file, location or contact card, without moving…"
+          },
+          {
+            "name": "disappearingSeconds",
+            "type": "0 | 86400 | 604800 | 7776000",
+            "required": false,
+            "description": "Match the chat's disappearing timer."
+          },
+          {
+            "name": "replyToMessageId",
+            "type": "string",
+            "required": false,
+            "description": "A wuapi message id in the same chat to quote. One exception, a private reply: a message someone else wrote in a group can be quoted in the direct chat with its author (`to` is that message's `from`).…"
+          },
+          {
+            "name": "replyToStoryId",
+            "type": "string",
+            "required": false,
+            "description": "Reply to a contact's story: the story's `id` (from `GET /v1/accounts/{accountId}/stories`). `to` must be the story's `contactId`: the reply is a message in the chat with its author, who sees it as a…"
+          },
+          {
+            "name": "metadata",
+            "type": "object",
+            "required": false,
+            "description": "Up to 50 string values; keys 1-64 printable ASCII characters not starting with `$` or `_`."
+          }
+        ]
+      },
+      {
         "name": "calendar_event",
         "fields": [
           {
